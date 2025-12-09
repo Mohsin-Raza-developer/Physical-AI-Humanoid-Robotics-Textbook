@@ -1,6 +1,7 @@
 import type {ReactNode} from 'react';
-import { CpuChipIcon, RocketLaunchIcon, BoltIcon, AcademicCapIcon } from '@heroicons/react/24/outline';
+import Icon from '../ui/Icon';
 import FeatureCard from '../features/FeatureCard';
+import AnimatedSection from '../ui/AnimatedSection';
 import styles from './styles.module.css';
 
 type FeatureItem = {
@@ -12,25 +13,25 @@ type FeatureItem = {
 
 const FeatureList: FeatureItem[] = [
   {
-    icon: <CpuChipIcon className="w-14 h-14" />,
+    icon: <Icon name="cpu" size="xl" ariaLabel="ROS 2 icon" />,
     title: 'ROS 2 Fundamentals',
     description: 'Master Robot Operating System 2 with hands-on tutorials covering nodes, topics, services, and actions for modern robotics development.',
     link: '/docs/ros2/intro',
   },
   {
-    icon: <RocketLaunchIcon className="w-14 h-14" />,
+    icon: <Icon name="rocket" size="xl" ariaLabel="Simulation icon" />,
     title: 'Simulation Environments',
     description: 'Learn Gazebo and Unity simulation tools to test and validate robot behaviors in realistic virtual environments before deployment.',
     link: '/docs/gazebo-unity/intro',
   },
   {
-    icon: <BoltIcon className="w-14 h-14" />,
+    icon: <Icon name="bolt" size="xl" ariaLabel="Isaac Sim icon" />,
     title: 'Isaac Sim Platform',
     description: 'Explore NVIDIA Isaac Sim for GPU-accelerated robotics simulation with photorealistic rendering and physics-based modeling.',
     link: '/docs/isaac/intro',
   },
   {
-    icon: <AcademicCapIcon className="w-14 h-14" />,
+    icon: <Icon name="academic" size="xl" ariaLabel="Vision-Language-Action icon" />,
     title: 'Vision-Language-Action',
     description: 'Understand VLA models that combine computer vision and language understanding to enable embodied AI decision-making.',
     link: '/docs/vla/intro',
@@ -43,13 +44,19 @@ export default function HomepageFeatures(): ReactNode {
       <div className="container">
         <div className={styles.featuresGrid}>
           {FeatureList.map((feature, idx) => (
-            <FeatureCard
+            <AnimatedSection
               key={idx}
-              icon={feature.icon}
-              title={feature.title}
-              description={feature.description}
-              link={feature.link}
-            />
+              animation="fade-in"
+              delay={idx * 100}
+              threshold={0.1}
+            >
+              <FeatureCard
+                icon={feature.icon}
+                title={feature.title}
+                description={feature.description}
+                link={feature.link}
+              />
+            </AnimatedSection>
           ))}
         </div>
       </div>
