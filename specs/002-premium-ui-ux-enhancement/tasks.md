@@ -145,20 +145,20 @@ This is a Docusaurus project with the following structure:
 - [X] T054 [US4] Stagger feature card animations with 100ms delay between cards
 - [X] T055 [US4] Install webpack-bundle-analyzer@^4.10.1 with npm install -D
 - [X] T056 [US4] Add bundle analyzer script to package.json
-- [ ] T057 [US4] Run bundle analysis and verify Heroicons tree-shaking works (only ~10KB)
-- [ ] T058 [US4] Verify CSS bundle < 150KB using du -h build/assets/*.css
-- [ ] T059 [US4] Verify JS bundle < 500KB using du -h build/assets/*.js
-- [ ] T060 [US4] Optimize images to WebP format, max 200KB per image in static/img/
+- [X] T057 [US4] Run bundle analysis and verify Heroicons tree-shaking works (only ~10KB)
+- [X] T058 [US4] Verify CSS bundle < 150KB using du -h build/assets/*.css
+- [X] T059 [US4] Verify JS bundle < 500KB using du -h build/assets/*.js
+- [X] T060 [US4] Optimize images to WebP format, max 200KB per image in static/img/
 - [X] T061 [US4] Install @lhci/cli@^0.13.0 with npm install -D
 - [X] T062 [US4] Create .lighthouserc.json config with performance > 90, accessibility > 95 thresholds
 - [X] T063 [US4] Create .github/workflows/lighthouse-ci.yml workflow file
-- [ ] T064 [US4] Test animations run at 60fps using Chrome DevTools Performance monitor
-- [ ] T065 [US4] Test scroll animations fire on viewport entry
-- [ ] T066 [US4] Enable prefers-reduced-motion in OS settings and verify animations are disabled
-- [ ] T067 [US4] Run Lighthouse audit on homepage and verify Performance > 90 (desktop)
-- [ ] T068 [US4] Run Lighthouse audit on homepage and verify Performance > 90 (mobile)
-- [ ] T069 [US4] Verify LCP < 2.5s and CLS < 0.1 in Lighthouse report
-- [ ] T070 [US4] Time build with time npm run build and verify < 5 minutes
+- [ ] T064 [US4] Test animations run at 60fps using Chrome DevTools Performance monitor (Manual test - run `npm start`)
+- [ ] T065 [US4] Test scroll animations fire on viewport entry (Manual test - run `npm start`)
+- [ ] T066 [US4] Enable prefers-reduced-motion in OS settings and verify animations are disabled (Manual test)
+- [ ] T067 [US4] Run Lighthouse audit on homepage and verify Performance > 90 (desktop) (Manual test - use Chrome DevTools)
+- [ ] T068 [US4] Run Lighthouse audit on homepage and verify Performance > 90 (mobile) (Manual test - use Chrome DevTools)
+- [ ] T069 [US4] Verify LCP < 2.5s and CLS < 0.1 in Lighthouse report (Manual test - use Chrome DevTools)
+- [X] T070 [US4] Time build with time npm run build and verify < 5 minutes
 
 **Checkpoint**: User Story 4 complete - Performance is optimized and animations are smooth
 
