@@ -14,22 +14,25 @@ interface ButtonProps {
   type?: 'button' | 'submit' | 'reset';
   disabled?: boolean;
   ariaLabel?: string;
+  icon?: React.ReactNode;
+  iconPosition?: 'left' | 'right';
 }
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary: `
-    bg-white text-primary-800
-    hover:bg-gray-50 hover:shadow-lg hover:-translate-y-0.5
+    bg-gradient-to-r from-primary-600 to-primary-800 text-white
+    hover:from-primary-700 hover:to-primary-900 hover:shadow-xl hover:-translate-y-0.5
     focus:ring-4 focus:ring-primary-300
-    dark:bg-primary-500 dark:text-white dark:hover:bg-primary-600
-    shadow-md
+    dark:bg-gradient-to-r dark:from-primary-500 dark:to-primary-700 dark:hover:from-primary-600 dark:hover:to-primary-800
+    shadow-lg
   `,
   secondary: `
     bg-gradient-to-r from-secondary-500 to-primary-600 text-white
-    hover:from-secondary-600 hover:to-primary-700 hover:shadow-lg hover:-translate-y-0.5
+    hover:from-secondary-600 hover:to-primary-700 hover:shadow-xl hover:-translate-y-0.5
     focus:ring-4 focus:ring-secondary-300
-    dark:from-secondary-400 dark:to-primary-500
-    shadow-md
+    dark:bg-white/10 dark:backdrop-blur-md dark:border dark:border-white/30
+    dark:hover:bg-white/20 dark:hover:border-white/40
+    shadow-lg
   `,
   accent: `
     bg-accent-600 text-white
@@ -63,9 +66,11 @@ export default function Button({
   type = 'button',
   disabled = false,
   ariaLabel,
+  icon,
+  iconPosition = 'left',
 }: ButtonProps): JSX.Element {
   const baseStyles = `
-    inline-flex items-center justify-center
+    inline-flex items-center justify-center gap-2
     font-semibold rounded-lg
     transition-all duration-200 ease-out
     focus:outline-none focus:ring-offset-2
@@ -75,6 +80,14 @@ export default function Button({
     ${className}
   `.replace(/\s+/g, ' ').trim();
 
+  const content = (
+    <>
+      {icon && iconPosition === 'left' && <span className="w-5 h-5">{icon}</span>}
+      {children}
+      {icon && iconPosition === 'right' && <span className="w-5 h-5">{icon}</span>}
+    </>
+  );
+
   if (href && !disabled) {
     return (
       <Link
@@ -82,7 +95,7 @@ export default function Button({
         className={baseStyles}
         aria-label={ariaLabel}
       >
-        {children}
+        {content}
       </Link>
     );
   }
@@ -95,7 +108,7 @@ export default function Button({
       className={baseStyles}
       aria-label={ariaLabel}
     >
-      {children}
+      {content}
     </button>
   );
 }
