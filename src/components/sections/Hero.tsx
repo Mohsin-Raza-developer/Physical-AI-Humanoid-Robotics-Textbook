@@ -1,5 +1,5 @@
 import React from 'react';
-import Link from '@docusaurus/Link';
+import Button from '../ui/Button';
 import styles from './Hero.module.css';
 
 export default function Hero(): JSX.Element {
@@ -15,16 +15,22 @@ export default function Hero(): JSX.Element {
             in robotics development
           </p>
           <div className={styles.heroButtons}>
-            <Link
-              className={styles.heroCta}
-              to="/docs/intro">
+            <Button
+              variant="primary"
+              size="lg"
+              href="/docs/intro"
+              ariaLabel="Start learning Physical AI and Humanoid Robotics"
+            >
               Get Started
-            </Link>
-            <Link
-              className={styles.heroCtaSecondary}
-              to="https://github.com/Mohsin-Raza-developer/Physical-AI-Humanoid-Robotics-Textbook">
+            </Button>
+            <Button
+              variant="ghost"
+              size="lg"
+              href="https://github.com/Mohsin-Raza-developer/Physical-AI-Humanoid-Robotics-Textbook"
+              ariaLabel="View project source code on GitHub"
+            >
               View on GitHub
-            </Link>
+            </Button>
           </div>
         </div>
       </div>
