@@ -1,4 +1,4 @@
-# Qwen Code Rules
+# Claude Code Rules
 
 This file is generated during init for the selected agent.
 
@@ -208,10 +208,3 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 
 ## Code Standards
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
-
-## Active Technologies
-- JavaScript/TypeScript with Node.js 18+ (as required by Docusaurus v3) + Docusaurus v3, React 18, Node.js 18+, Tailwind CSS 3.x, GitHub Pages (001-docusaurus-book-setup)
-- Static file storage (Markdown/MDX files for content) (001-docusaurus-book-setup)
-
-## Recent Changes
-- 001-docusaurus-book-setup: Added JavaScript/TypeScript with Node.js 18+ (as required by Docusaurus v3) + Docusaurus v3, React 18, Node.js 18+, Tailwind CSS 3.x, GitHub Pages
