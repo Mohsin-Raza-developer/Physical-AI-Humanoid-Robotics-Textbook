@@ -1,4 +1,5 @@
 import React from 'react';
+import { RocketLaunchIcon, CommandLineIcon } from '@heroicons/react/24/outline';
 import Button from '../ui/Button';
 import styles from './Hero.module.css';
 
@@ -19,14 +20,18 @@ export default function Hero(): JSX.Element {
               variant="primary"
               size="lg"
               href="/docs/intro"
+              icon={<RocketLaunchIcon />}
+              iconPosition="left"
               ariaLabel="Start learning Physical AI and Humanoid Robotics"
             >
               Get Started
             </Button>
             <Button
-              variant="ghost"
+              variant="secondary"
               size="lg"
               href="https://github.com/Mohsin-Raza-developer/Physical-AI-Humanoid-Robotics-Textbook"
+              icon={<CommandLineIcon />}
+              iconPosition="left"
               ariaLabel="View project source code on GitHub"
             >
               View on GitHub

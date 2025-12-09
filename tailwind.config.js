@@ -7,6 +7,7 @@ module.exports = {
     "./pages/**/*.{md,mdx}",
     "./docusaurus.config.{js,ts}",
   ],
+  darkMode: ['class', '[data-theme="dark"]'],
   theme: {
     extend: {
       colors: {
