@@ -1,68 +1,55 @@
 import type {ReactNode} from 'react';
-import clsx from 'clsx';
-import Heading from '@theme/Heading';
+import { CpuChipIcon, RocketLaunchIcon, BoltIcon, AcademicCapIcon } from '@heroicons/react/24/outline';
+import FeatureCard from '../features/FeatureCard';
 import styles from './styles.module.css';
 
 type FeatureItem = {
+  icon: ReactNode;
   title: string;
-  Svg: React.ComponentType<React.ComponentProps<'svg'>>;
-  description: ReactNode;
+  description: string;
+  link: string;
 };
 
 const FeatureList: FeatureItem[] = [
   {
-    title: 'Learn Physical AI',
-    Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
-    description: (
-      <>
-        Master the fundamentals of Physical AI, bridging the gap between digital
-        AI and physical embodied intelligence in robotics applications.
-      </>
-    ),
+    icon: <CpuChipIcon className="w-14 h-14" />,
+    title: 'ROS 2 Fundamentals',
+    description: 'Master Robot Operating System 2 with hands-on tutorials covering nodes, topics, services, and actions for modern robotics development.',
+    link: '/docs/ros2/intro',
   },
   {
-    title: 'Humanoid Robotics',
-    Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
-    description: (
-      <>
-        Explore the cutting-edge field of humanoid robotics, understanding how
-        AI algorithms bring robots to life in physical environments.
-      </>
-    ),
+    icon: <RocketLaunchIcon className="w-14 h-14" />,
+    title: 'Simulation Environments',
+    description: 'Learn Gazebo and Unity simulation tools to test and validate robot behaviors in realistic virtual environments before deployment.',
+    link: '/docs/gazebo-unity/intro',
   },
   {
-    title: 'Industry Ready',
-    Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
-    description: (
-      <>
-        Learn with industry-standard tools like ROS 2, NVIDIA Isaac, Gazebo,
-        and Unity - preparing you for professional robotics development.
-      </>
-    ),
+    icon: <BoltIcon className="w-14 h-14" />,
+    title: 'Isaac Sim Platform',
+    description: 'Explore NVIDIA Isaac Sim for GPU-accelerated robotics simulation with photorealistic rendering and physics-based modeling.',
+    link: '/docs/isaac/intro',
+  },
+  {
+    icon: <AcademicCapIcon className="w-14 h-14" />,
+    title: 'Vision-Language-Action',
+    description: 'Understand VLA models that combine computer vision and language understanding to enable embodied AI decision-making.',
+    link: '/docs/vla/intro',
   },
 ];
-
-function Feature({title, Svg, description}: FeatureItem) {
-  return (
-    <div className={clsx('col col--4')}>
-      <div className="text--center">
-        <Svg className={styles.featureSvg} role="img" />
-      </div>
-      <div className="text--center padding-horiz--md">
-        <Heading as="h3">{title}</Heading>
-        <p>{description}</p>
-      </div>
-    </div>
-  );
-}
 
 export default function HomepageFeatures(): ReactNode {
   return (
     <section className={styles.features}>
       <div className="container">
-        <div className="row">
-          {FeatureList.map((props, idx) => (
-            <Feature key={idx} {...props} />
+        <div className={styles.featuresGrid}>
+          {FeatureList.map((feature, idx) => (
+            <FeatureCard
+              key={idx}
+              icon={feature.icon}
+              title={feature.title}
+              description={feature.description}
+              link={feature.link}
+            />
           ))}
         </div>
       </div>
