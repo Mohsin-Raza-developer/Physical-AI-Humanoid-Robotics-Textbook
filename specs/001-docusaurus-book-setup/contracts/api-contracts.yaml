@@ -1,0 +1,150 @@
+# API Contracts: Docusaurus Book Setup
+
+## User Preferences API
+
+### GET /api/preferences
+Get user preferences including theme settings, accessibility options, and content preferences.
+
+**Response (200 OK):**
+```json
+{
+  "theme": "light|dark",
+  "fontSize": "small|medium|large",
+  "accessibilitySettings": {
+    "highContrast": false,
+    "screenReaderMode": false
+  },
+  "contentPreferences": {
+    "programmingLanguage": "python|cpp",
+    "difficulty": "beginner|intermediate|advanced"
+  }
+}
+```
+
+**Error Responses:**
+- 401: Unauthorized
+- 404: Preferences not found
+
+### PUT /api/preferences
+Update user preferences.
+
+**Request:**
+```json
+{
+  "theme": "light|dark",
+  "fontSize": "small|medium|large",
+  "accessibilitySettings": {
+    "highContrast": false,
+    "screenReaderMode": false
+  }
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "message": "Preferences updated successfully"
+}
+```
+
+**Error Responses:**
+- 400: Invalid request body
+- 401: Unauthorized
+
+## Content Search API
+
+### GET /api/search?q={query}&limit={limit}
+Search across all textbook content.
+
+**Parameters:**
+- q: Search query string
+- limit: Maximum number of results (default: 10, max: 50)
+
+**Response (200 OK):**
+```json
+{
+  "query": "search query",
+  "results": [
+    {
+      "id": "unique-identifier",
+      "title": "Content Title",
+      "url": "/module/subsection",
+      "module": "module-name",
+      "section": "section-name",
+      "excerpt": "Relevant text snippet...",
+      "score": 0.85
+    }
+  ],
+  "total": 5
+}
+```
+
+**Error Responses:**
+- 400: Invalid parameters
+- 500: Search service unavailable
+
+## Content Progress API
+
+### GET /api/progress
+Get content completion progress for the user.
+
+**Response (200 OK):**
+```json
+{
+  "modules": [
+    {
+      "id": "ros2",
+      "name": "ROS 2",
+      "progress": 0.65,
+      "sectionsCompleted": 13,
+      "totalSections": 20,
+      "lastAccessed": "2023-10-15T10:30:00Z"
+    }
+  ]
+}
+```
+
+### POST /api/progress
+Update progress for a specific content section.
+
+**Request:**
+```json
+{
+  "moduleId": "ros2",
+  "sectionId": "ros2-basics",
+  "completed": true,
+  "timeSpentSeconds": 1200
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "message": "Progress updated successfully",
+  "progress": 0.67
+}
+```
+
+## Content Feedback API
+
+### POST /api/feedback
+Submit feedback for specific content.
+
+**Request:**
+```json
+{
+  "contentId": "ros2-basics",
+  "type": "correction|suggestion|praise|bug",
+  "message": "Description of the feedback",
+  "rating": 1-5,
+  "timestamp": "2023-10-15T10:30:00Z"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "message": "Feedback submitted successfully",
+  "feedbackId": "unique-feedback-id"
+}
+```
