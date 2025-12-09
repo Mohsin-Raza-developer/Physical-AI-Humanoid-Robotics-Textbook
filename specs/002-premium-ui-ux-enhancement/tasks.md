@@ -138,20 +138,20 @@ This is a Docusaurus project with the following structure:
 
 - [X] T048 [P] [US4] Create useIntersectionObserver.ts hook for scroll detection in src/hooks/useIntersectionObserver.ts
 - [X] T049 [P] [US4] Create AnimatedSection.tsx wrapper component in src/components/ui/AnimatedSection.tsx
-- [ ] T050 [US4] Add custom keyframes (fade-in, slide-up, gradient-shift) to tailwind.config.js
-- [ ] T051 [US4] Add prefers-reduced-motion media query to src/css/custom.css
+- [X] T050 [US4] Add custom keyframes (fade-in, slide-up, gradient-shift) to tailwind.config.js
+- [X] T051 [US4] Add prefers-reduced-motion media query to src/css/custom.css
 - [X] T052 [US4] Apply AnimatedSection to feature cards in src/components/HomepageFeatures/index.tsx
 - [X] T053 [US4] Add will-change: transform, opacity to animated elements in FeatureCard.module.css
 - [X] T054 [US4] Stagger feature card animations with 100ms delay between cards
 - [X] T055 [US4] Install webpack-bundle-analyzer@^4.10.1 with npm install -D
-- [ ] T056 [US4] Add bundle analyzer script to package.json
+- [X] T056 [US4] Add bundle analyzer script to package.json
 - [ ] T057 [US4] Run bundle analysis and verify Heroicons tree-shaking works (only ~10KB)
 - [ ] T058 [US4] Verify CSS bundle < 150KB using du -h build/assets/*.css
 - [ ] T059 [US4] Verify JS bundle < 500KB using du -h build/assets/*.js
 - [ ] T060 [US4] Optimize images to WebP format, max 200KB per image in static/img/
 - [X] T061 [US4] Install @lhci/cli@^0.13.0 with npm install -D
-- [ ] T062 [US4] Create .lighthouserc.json config with performance > 90, accessibility > 95 thresholds
-- [ ] T063 [US4] Create .github/workflows/lighthouse-ci.yml workflow file
+- [X] T062 [US4] Create .lighthouserc.json config with performance > 90, accessibility > 95 thresholds
+- [X] T063 [US4] Create .github/workflows/lighthouse-ci.yml workflow file
 - [ ] T064 [US4] Test animations run at 60fps using Chrome DevTools Performance monitor
 - [ ] T065 [US4] Test scroll animations fire on viewport entry
 - [ ] T066 [US4] Enable prefers-reduced-motion in OS settings and verify animations are disabled
