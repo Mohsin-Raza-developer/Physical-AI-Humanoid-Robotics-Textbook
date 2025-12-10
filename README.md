@@ -1,6 +1,6 @@
 # Physical AI & Humanoid Robotics Textbook
 
-Interactive textbook for Physical AI and Humanoid Robotics education built with Docusaurus v3.
+Interactive textbook for Physical AI and Humanoid Robotics education.
 
 ## Features
 
@@ -51,23 +51,34 @@ This command starts a local development server and opens the application in your
 
 ```
 Physical-AI-Humanoid-Robotics-Textbook/
-├── docs/                 # Documentation content
-│   ├── ros2/             # ROS 2 module content
-│   ├── gazebo-unity/     # Gazebo/Unity module content
-│   ├── isaac/            # Isaac framework module content
-│   ├── vla/              # Vision-Language-Action module content
-│   └── intro/            # Introduction content
-├── src/                  # Custom React components and styles
-│   ├── components/       # Reusable React components
-│   ├── pages/            # Custom pages
-│   ├── css/              # Custom styles
-│   └── theme/            # Custom theme components
-├── static/               # Static assets
-├── .github/              # GitHub Actions workflows
-├── docusaurus.config.ts  # Docusaurus configuration
-├── sidebars.ts           # Navigation sidebar configuration
-└── package.json          # Dependencies and scripts
+├── docs/                       # Documentation content (see CONTENT_STRUCTURE.md)
+│   ├── intro/                  # Introduction (Weeks 1-2)
+│   ├── module-1-ros2/          # ROS 2 module (Weeks 3-5)
+│   ├── module-2-gazebo-unity/  # Gazebo/Unity module (Weeks 6-7)
+│   ├── module-3-isaac/         # Isaac framework (Weeks 8-10)
+│   ├── module-4-vla/           # VLA & Capstone (Weeks 11-13)
+│   ├── setup/                  # Hardware & software setup guides
+│   └── resources/              # Glossary, references, additional reading
+├── src/                        # Custom React components and styles
+│   ├── components/             # Reusable React components
+│   ├── pages/                  # Custom pages
+│   ├── css/                    # Custom styles
+│   └── theme/                  # Custom theme components
+├── static/                     # Static assets (images, files)
+├── specs/                      # Design specifications and documentation
+├── .github/                    # GitHub Actions workflows
+├── docusaurus.config.ts        # Docusaurus configuration
+├── sidebars.ts                 # Navigation sidebar configuration
+├── CONTENT_STRUCTURE.md        # Content organization guide (READ THIS!)
+└── package.json                # Dependencies and scripts
 ```
+
+**📚 For Content Authors:** See [CONTENT_STRUCTURE.md](./CONTENT_STRUCTURE.md) for detailed information about:
+- File naming conventions (`week-X-lesson-Y-topic.md`)
+- Folder structure and organization
+- Frontmatter requirements
+- Sidebar position system
+- Content creation guidelines
 
 ## Contributing
 

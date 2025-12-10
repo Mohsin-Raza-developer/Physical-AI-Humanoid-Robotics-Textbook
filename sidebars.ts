@@ -15,12 +15,20 @@ import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
 const sidebars: SidebarsConfig = {
   // Main textbook sidebar
   textbookSidebar: [
-    // Introduction
+    // Introduction (Weeks 1-2)
     {
       type: 'category',
-      label: 'Introduction',
+      label: 'Introduction (Weeks 1-2)',
       collapsed: false,
-      items: ['intro/index'],
+      link: {
+        type: 'doc',
+        id: 'intro/index',
+      },
+      items: [
+        'intro/index',
+        'intro/week-1-2-physical-ai-foundations',
+        'intro/week-1-2-sensors-overview',
+      ],
     },
 
     // Module 1: ROS 2 (Weeks 3-5)
@@ -47,6 +55,7 @@ const sidebars: SidebarsConfig = {
           label: 'Week 4: Advanced Communication',
           items: [
             'module-1-ros2/week-4-lesson-1-services-actions',
+            'module-1-ros2/week-4-lesson-2-building-packages',
           ],
         },
         {
@@ -55,6 +64,13 @@ const sidebars: SidebarsConfig = {
           items: [
             'module-1-ros2/week-5-lesson-1-launch-files',
             'module-1-ros2/week-5-lesson-2-urdf-humanoids',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Assessments',
+          items: [
+            'module-1-ros2/assessments/ros2-package-project',
           ],
         },
       ],
@@ -76,6 +92,7 @@ const sidebars: SidebarsConfig = {
           label: 'Week 6: Gazebo Fundamentals',
           items: [
             'module-2-gazebo-unity/week-6-lesson-1-gazebo-setup',
+            'module-2-gazebo-unity/week-6-lesson-2-urdf-sdf',
           ],
         },
         {
@@ -85,6 +102,13 @@ const sidebars: SidebarsConfig = {
             'module-2-gazebo-unity/week-7-lesson-1-physics-simulation',
             'module-2-gazebo-unity/week-7-lesson-2-unity-robotics',
             'module-2-gazebo-unity/week-7-lesson-3-sensor-simulation',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Assessments',
+          items: [
+            'module-2-gazebo-unity/assessments/gazebo-simulation-project',
           ],
         },
       ],
@@ -106,6 +130,7 @@ const sidebars: SidebarsConfig = {
           label: 'Week 8: Isaac Platform',
           items: [
             'module-3-isaac/week-8-lesson-1-isaac-sim-setup',
+            'module-3-isaac/week-8-lesson-2-isaac-sdk-intro',
           ],
         },
         {
@@ -120,7 +145,15 @@ const sidebars: SidebarsConfig = {
           type: 'category',
           label: 'Week 10: Sim-to-Real',
           items: [
+            'module-3-isaac/week-10-lesson-1-reinforcement-learning',
             'module-3-isaac/week-10-lesson-2-sim-to-real',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Assessments',
+          items: [
+            'module-3-isaac/assessments/isaac-perception-pipeline',
           ],
         },
       ],
@@ -142,6 +175,7 @@ const sidebars: SidebarsConfig = {
           label: 'Week 11: Humanoid Robotics',
           items: [
             'module-4-vla/week-11-lesson-1-humanoid-kinematics',
+            'module-4-vla/week-11-lesson-2-bipedal-locomotion',
           ],
         },
         {
@@ -149,6 +183,7 @@ const sidebars: SidebarsConfig = {
           label: 'Week 12: Advanced Interaction',
           items: [
             'module-4-vla/week-12-lesson-1-manipulation-grasping',
+            'module-4-vla/week-12-lesson-2-human-robot-interaction',
           ],
         },
         {
@@ -156,7 +191,43 @@ const sidebars: SidebarsConfig = {
           label: 'Week 13: Conversational AI & Capstone',
           items: [
             'module-4-vla/week-13-lesson-1-conversational-robotics',
+            'module-4-vla/week-13-lesson-2-gpt-integration',
             'module-4-vla/week-13-lesson-3-capstone-project',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Assessments',
+          items: [
+            'module-4-vla/assessments/capstone-simulated-humanoid',
+          ],
+        },
+      ],
+    },
+
+    // Setup & Resources
+    {
+      type: 'category',
+      label: 'Setup & Resources',
+      collapsed: true,
+      items: [
+        {
+          type: 'category',
+          label: 'Hardware & Software Setup',
+          items: [
+            'setup/hardware-requirements',
+            'setup/software-setup',
+            'setup/lab-infrastructure',
+            'setup/student-kit-guide',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Resources',
+          items: [
+            'resources/glossary',
+            'resources/references',
+            'resources/additional-reading',
           ],
         },
       ],
