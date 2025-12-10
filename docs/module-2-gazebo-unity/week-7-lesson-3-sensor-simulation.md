@@ -1,7 +1,9 @@
 ---
-title: Physics and Sensors in Simulation
-sidebar_position: 4
-description: Implementing physics and sensors in simulation environments
+title: Sensor Simulation
+sidebar_label: "Lesson 3: Sensor Simulation"
+sidebar_position: 73
+description: Simulating LiDAR, depth cameras, and IMUs in robotics environments
+tags: [sensors, week-7, lidar, cameras, imu]
 ---
 
 # Physics and Sensors in Simulation

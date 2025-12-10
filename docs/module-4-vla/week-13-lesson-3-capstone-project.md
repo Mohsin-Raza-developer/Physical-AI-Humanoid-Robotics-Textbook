@@ -1,7 +1,9 @@
 ---
 title: VLA in Physical AI Systems
-sidebar_position: 5
+sidebar_label: "Lesson 3: Capstone Project"
+sidebar_position: 133
 description: Integrating VLA models into Physical AI systems
+tags: [vla, capstone, week-13]
 ---
 
 # VLA in Physical AI Systems

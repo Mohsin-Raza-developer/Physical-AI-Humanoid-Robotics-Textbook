@@ -1,7 +1,9 @@
 ---
 title: VLA for Robotic Control
-sidebar_position: 4
+sidebar_label: "Lesson 1: Conversational Robotics"
+sidebar_position: 131
 description: Using Vision-Language-Action models for robotic control
+tags: [vla, conversation, week-13]
 ---
 
 # VLA for Robotic Control

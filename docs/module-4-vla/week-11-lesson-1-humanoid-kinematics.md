@@ -1,7 +1,9 @@
 ---
 title: VLA Model Architectures
-sidebar_position: 2
+sidebar_label: "Lesson 1: Humanoid Kinematics"
+sidebar_position: 111
 description: Understanding Vision-Language-Action model architectures
+tags: [vla, kinematics, week-11]
 ---
 
 # VLA Model Architectures

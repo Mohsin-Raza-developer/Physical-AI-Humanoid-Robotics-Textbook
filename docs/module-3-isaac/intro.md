@@ -19,7 +19,7 @@ After completing this module, you will be able to:
 
 ## Table of Contents
 
-- [Isaac Sim Fundamentals](./isaac-sim)
-- [Perception Pipelines](./perception-pipelines)
-- [Navigation and Manipulation](./nav-manipulation)
-- [Isaac for Physical AI](./isaac-physical-ai)
+- [Isaac Sim Setup](./week-8-lesson-1-isaac-sim-setup)
+- [AI Perception](./week-9-lesson-1-ai-perception)
+- [Manipulation](./week-9-lesson-2-manipulation)
+- [Sim-to-Real Transfer](./week-10-lesson-2-sim-to-real)

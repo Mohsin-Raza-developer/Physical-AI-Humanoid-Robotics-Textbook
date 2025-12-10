@@ -1,7 +1,9 @@
 ---
-title: Simulation for Physical AI
-sidebar_position: 5
-description: Applying simulation to Physical AI research and development
+title: Physics Simulation
+sidebar_label: "Lesson 1: Physics Simulation"
+sidebar_position: 71
+description: Simulating physics, gravity, and collisions in robotics environments
+tags: [gazebo, unity, week-7, physics]
 ---
 
 # Simulation for Physical AI

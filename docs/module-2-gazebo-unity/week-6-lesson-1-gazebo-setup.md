@@ -1,7 +1,9 @@
 ---
 title: Gazebo Fundamentals
-sidebar_position: 2
+sidebar_label: "Lesson 1: Gazebo Setup"
+sidebar_position: 61
 description: Introduction to Gazebo simulation environment
+tags: [gazebo, week-6, simulation]
 ---
 
 # Gazebo Fundamentals

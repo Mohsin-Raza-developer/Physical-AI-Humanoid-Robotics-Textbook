@@ -1,7 +1,9 @@
 ---
 title: Unity Robotics Simulation
-sidebar_position: 3
-description: Using Unity for robotics simulation
+sidebar_label: "Lesson 2: Unity Robotics"
+sidebar_position: 72
+description: Using Unity for high-fidelity robotics simulation and rendering
+tags: [unity, week-7, simulation]
 ---
 
 # Unity Robotics Simulation

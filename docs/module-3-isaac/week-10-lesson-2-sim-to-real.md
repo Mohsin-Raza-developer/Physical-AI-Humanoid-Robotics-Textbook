@@ -1,7 +1,9 @@
 ---
 title: Isaac for Physical AI
-sidebar_position: 5
+sidebar_label: "Lesson 2: Sim-to-Real"
+sidebar_position: 102
 description: Applying Isaac to Physical AI research and development
+tags: [isaac, sim-to-real, week-10]
 ---
 
 # Isaac for Physical AI

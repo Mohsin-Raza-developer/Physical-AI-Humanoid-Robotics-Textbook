@@ -19,7 +19,7 @@ After completing this module, you will be able to:
 
 ## Table of Contents
 
-- [Gazebo Fundamentals](./gazebo-fundamentals)
-- [Unity Robotics Simulation](./unity-robotics)
-- [Physics and Sensors in Simulation](./physics-sensors)
-- [Simulation for Physical AI](./simulation-physical-ai)
+- [Gazebo Setup](./week-6-lesson-1-gazebo-setup)
+- [Physics Simulation](./week-7-lesson-1-physics-simulation)
+- [Unity Robotics Simulation](./week-7-lesson-2-unity-robotics)
+- [Sensor Simulation](./week-7-lesson-3-sensor-simulation)

@@ -1,7 +1,9 @@
 ---
 title: Topics, Services, and Actions
-sidebar_position: 4
+sidebar_label: "Lesson 1: Communication"
+sidebar_position: 41
 description: Communication patterns in ROS 2
+tags: [ros2, week-4, topics, services, actions]
 ---
 
 # Topics, Services, and Actions

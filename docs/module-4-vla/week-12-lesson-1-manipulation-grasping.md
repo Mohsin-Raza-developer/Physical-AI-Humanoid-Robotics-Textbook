@@ -1,7 +1,9 @@
 ---
 title: Training VLA Models
-sidebar_position: 3
+sidebar_label: "Lesson 1: Manipulation & Grasping"
+sidebar_position: 121
 description: Training Vision-Language-Action models for robotics
+tags: [vla, grasping, week-12]
 ---
 
 # Training VLA Models

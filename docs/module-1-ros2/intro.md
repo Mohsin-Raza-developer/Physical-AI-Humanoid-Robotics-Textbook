@@ -19,8 +19,8 @@ After completing this module, you will be able to:
 
 ## Table of Contents
 
-- [ROS 2 Architecture](./architecture)
-- [Nodes and Packages](./nodes-packages)
-- [Topics, Services, and Actions](./communication)
-- [Launch Files and Parameters](./launch)
-- [ROS 2 with Physical AI](./ros2-physical-ai)
+- [ROS 2 Architecture](./week-3-lesson-1-ros2-architecture)
+- [Nodes and Packages](./week-3-lesson-2-nodes-packages)
+- [Topics, Services, and Actions](./week-4-lesson-1-services-actions)
+- [Launch Files and Parameters](./week-5-lesson-1-launch-files)
+- [URDF for Humanoid Robots](./week-5-lesson-2-urdf-humanoids)

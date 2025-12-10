@@ -1,7 +1,9 @@
 ---
 title: Perception Pipelines
-sidebar_position: 3
+sidebar_label: "Lesson 1: AI Perception"
+sidebar_position: 91
 description: Building perception pipelines with Isaac
+tags: [isaac, perception, week-9]
 ---
 
 # Perception Pipelines

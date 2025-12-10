@@ -1,7 +1,9 @@
 ---
 title: Launch Files and Parameters
-sidebar_position: 5
+sidebar_label: "Lesson 1: Launch Files"
+sidebar_position: 51
 description: Managing ROS 2 nodes with launch files and parameters
+tags: [ros2, week-5, launch, parameters]
 ---
 
 # Launch Files and Parameters

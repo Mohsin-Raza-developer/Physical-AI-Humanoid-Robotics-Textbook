@@ -1,7 +1,9 @@
 ---
 title: ROS 2 Architecture
-sidebar_position: 2
+sidebar_label: "Lesson 1: Architecture"
+sidebar_position: 31
 description: Understanding the architecture of Robot Operating System 2
+tags: [ros2, week-3, architecture]
 ---
 
 # ROS 2 Architecture

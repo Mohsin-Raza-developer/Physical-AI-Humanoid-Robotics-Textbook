@@ -19,7 +19,7 @@ After completing this module, you will be able to:
 
 ## Table of Contents
 
-- [VLA Model Architectures](./vla-architectures)
-- [Training VLA Models](./training-vla)
-- [VLA for Robotic Control](./vla-control)
-- [VLA in Physical AI Systems](./vla-physical-ai)
+- [Humanoid Kinematics](./week-11-lesson-1-humanoid-kinematics)
+- [Manipulation & Grasping](./week-12-lesson-1-manipulation-grasping)
+- [Conversational Robotics](./week-13-lesson-1-conversational-robotics)
+- [Capstone Project](./week-13-lesson-3-capstone-project)

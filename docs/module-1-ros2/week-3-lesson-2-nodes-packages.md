@@ -1,7 +1,9 @@
 ---
 title: Nodes and Packages
-sidebar_position: 3
+sidebar_label: "Lesson 2: Nodes & Packages"
+sidebar_position: 32
 description: Creating and managing ROS 2 packages and nodes
+tags: [ros2, week-3, nodes, packages]
 ---
 
 # Nodes and Packages

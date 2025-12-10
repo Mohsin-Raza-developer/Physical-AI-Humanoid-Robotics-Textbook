@@ -57,47 +57,47 @@
 
 ### Implementation for User Story 1
 
-- [ ] T010 [P] [US1] Rename docs/module-1-ros2/architecture.md to docs/module-1-ros2/week-3-lesson-1-ros2-architecture.md using git mv
-- [ ] T011 [P] [US1] Rename docs/module-1-ros2/nodes-packages.md to docs/module-1-ros2/week-3-lesson-2-nodes-packages.md using git mv
-- [ ] T012 [P] [US1] Rename docs/module-1-ros2/communication.md to docs/module-1-ros2/week-4-lesson-1-services-actions.md using git mv
-- [ ] T013 [P] [US1] Rename docs/module-1-ros2/launch.md to docs/module-1-ros2/week-5-lesson-1-launch-files.md using git mv
-- [ ] T014 [P] [US1] Rename docs/module-1-ros2/ros2-physical-ai.md to docs/module-1-ros2/week-5-lesson-2-urdf-humanoids.md using git mv
-- [ ] T015 [US1] Update frontmatter in docs/module-1-ros2/week-3-lesson-1-ros2-architecture.md (sidebar_position: 31, tags: [ros2, week-3])
-- [ ] T016 [US1] Update frontmatter in docs/module-1-ros2/week-3-lesson-2-nodes-packages.md (sidebar_position: 32, tags: [ros2, week-3])
-- [ ] T017 [US1] Update frontmatter in docs/module-1-ros2/week-4-lesson-1-services-actions.md (sidebar_position: 41, tags: [ros2, week-4])
-- [ ] T018 [US1] Update frontmatter in docs/module-1-ros2/week-5-lesson-1-launch-files.md (sidebar_position: 51, tags: [ros2, week-5])
-- [ ] T019 [US1] Update frontmatter in docs/module-1-ros2/week-5-lesson-2-urdf-humanoids.md (sidebar_position: 52, tags: [ros2, week-5])
-- [ ] T020 [P] [US1] Rename docs/module-2-gazebo-unity/gazebo-fundamentals.md to docs/module-2-gazebo-unity/week-6-lesson-1-gazebo-setup.md using git mv
-- [ ] T021 [P] [US1] Rename docs/module-2-gazebo-unity/unity-robotics.md to docs/module-2-gazebo-unity/week-7-lesson-2-unity-robotics.md using git mv
-- [ ] T022 [P] [US1] Rename docs/module-2-gazebo-unity/physics-sensors.md to docs/module-2-gazebo-unity/week-7-lesson-3-sensor-simulation.md using git mv
-- [ ] T023 [P] [US1] Rename docs/module-2-gazebo-unity/simulation-physical-ai.md to docs/module-2-gazebo-unity/week-7-lesson-1-physics-simulation.md using git mv
-- [ ] T024 [US1] Update frontmatter in docs/module-2-gazebo-unity/week-6-lesson-1-gazebo-setup.md (sidebar_position: 61, tags: [gazebo, week-6])
-- [ ] T025 [US1] Update frontmatter in docs/module-2-gazebo-unity/week-7-lesson-1-physics-simulation.md (sidebar_position: 71, tags: [gazebo, unity, week-7])
-- [ ] T026 [US1] Update frontmatter in docs/module-2-gazebo-unity/week-7-lesson-2-unity-robotics.md (sidebar_position: 72, tags: [unity, week-7])
-- [ ] T027 [US1] Update frontmatter in docs/module-2-gazebo-unity/week-7-lesson-3-sensor-simulation.md (sidebar_position: 73, tags: [sensors, week-7])
-- [ ] T028 [P] [US1] Rename docs/module-3-isaac/isaac-sim.md to docs/module-3-isaac/week-8-lesson-1-isaac-sim-setup.md using git mv
-- [ ] T029 [P] [US1] Rename docs/module-3-isaac/perception-pipelines.md to docs/module-3-isaac/week-9-lesson-1-ai-perception.md using git mv
-- [ ] T030 [P] [US1] Rename docs/module-3-isaac/nav-manipulation.md to docs/module-3-isaac/week-9-lesson-2-manipulation.md using git mv
-- [ ] T031 [P] [US1] Rename docs/module-3-isaac/isaac-physical-ai.md to docs/module-3-isaac/week-10-lesson-2-sim-to-real.md using git mv
-- [ ] T032 [US1] Update frontmatter in docs/module-3-isaac/week-8-lesson-1-isaac-sim-setup.md (sidebar_position: 81, tags: [isaac, week-8])
-- [ ] T033 [US1] Update frontmatter in docs/module-3-isaac/week-9-lesson-1-ai-perception.md (sidebar_position: 91, tags: [isaac, perception, week-9])
-- [ ] T034 [US1] Update frontmatter in docs/module-3-isaac/week-9-lesson-2-manipulation.md (sidebar_position: 92, tags: [isaac, manipulation, week-9])
-- [ ] T035 [US1] Update frontmatter in docs/module-3-isaac/week-10-lesson-2-sim-to-real.md (sidebar_position: 102, tags: [isaac, sim-to-real, week-10])
-- [ ] T036 [P] [US1] Rename docs/module-4-vla/vla-architectures.md to docs/module-4-vla/week-11-lesson-1-humanoid-kinematics.md using git mv
-- [ ] T037 [P] [US1] Rename docs/module-4-vla/training-vla.md to docs/module-4-vla/week-12-lesson-1-manipulation-grasping.md using git mv
-- [ ] T038 [P] [US1] Rename docs/module-4-vla/vla-control.md to docs/module-4-vla/week-13-lesson-1-conversational-robotics.md using git mv
-- [ ] T039 [P] [US1] Rename docs/module-4-vla/vla-physical-ai.md to docs/module-4-vla/week-13-lesson-3-capstone-project.md using git mv
-- [ ] T040 [US1] Update frontmatter in docs/module-4-vla/week-11-lesson-1-humanoid-kinematics.md (sidebar_position: 111, tags: [vla, kinematics, week-11])
-- [ ] T041 [US1] Update frontmatter in docs/module-4-vla/week-12-lesson-1-manipulation-grasping.md (sidebar_position: 121, tags: [vla, grasping, week-12])
-- [ ] T042 [US1] Update frontmatter in docs/module-4-vla/week-13-lesson-1-conversational-robotics.md (sidebar_position: 131, tags: [vla, conversation, week-13])
-- [ ] T043 [US1] Update frontmatter in docs/module-4-vla/week-13-lesson-3-capstone-project.md (sidebar_position: 133, tags: [vla, capstone, week-13])
-- [ ] T044 [US1] Update sidebars.ts with new hierarchical structure per plan.md (Module 1: ROS 2)
-- [ ] T045 [US1] Update sidebars.ts with Module 2: Gazebo & Unity structure with week categories
-- [ ] T046 [US1] Update sidebars.ts with Module 3: NVIDIA Isaac structure with week categories
-- [ ] T047 [US1] Update sidebars.ts with Module 4: VLA & Capstone structure with week categories
-- [ ] T048 [US1] Add Introduction section to sidebars.ts (collapsed: false)
-- [ ] T049 [US1] Add Setup & Resources section to sidebars.ts
-- [ ] T050 [US1] Run npm run build to validate all links and sidebar structure
+- [X] T010 [P] [US1] Rename docs/module-1-ros2/architecture.md to docs/module-1-ros2/week-3-lesson-1-ros2-architecture.md using git mv
+- [X] T011 [P] [US1] Rename docs/module-1-ros2/nodes-packages.md to docs/module-1-ros2/week-3-lesson-2-nodes-packages.md using git mv
+- [X] T012 [P] [US1] Rename docs/module-1-ros2/communication.md to docs/module-1-ros2/week-4-lesson-1-services-actions.md using git mv
+- [X] T013 [P] [US1] Rename docs/module-1-ros2/launch.md to docs/module-1-ros2/week-5-lesson-1-launch-files.md using git mv
+- [X] T014 [P] [US1] Rename docs/module-1-ros2/ros2-physical-ai.md to docs/module-1-ros2/week-5-lesson-2-urdf-humanoids.md using git mv
+- [X] T015 [US1] Update frontmatter in docs/module-1-ros2/week-3-lesson-1-ros2-architecture.md (sidebar_position: 31, tags: [ros2, week-3])
+- [X] T016 [US1] Update frontmatter in docs/module-1-ros2/week-3-lesson-2-nodes-packages.md (sidebar_position: 32, tags: [ros2, week-3])
+- [X] T017 [US1] Update frontmatter in docs/module-1-ros2/week-4-lesson-1-services-actions.md (sidebar_position: 41, tags: [ros2, week-4])
+- [X] T018 [US1] Update frontmatter in docs/module-1-ros2/week-5-lesson-1-launch-files.md (sidebar_position: 51, tags: [ros2, week-5])
+- [X] T019 [US1] Update frontmatter in docs/module-1-ros2/week-5-lesson-2-urdf-humanoids.md (sidebar_position: 52, tags: [ros2, week-5])
+- [X] T020 [P] [US1] Rename docs/module-2-gazebo-unity/gazebo-fundamentals.md to docs/module-2-gazebo-unity/week-6-lesson-1-gazebo-setup.md using git mv
+- [X] T021 [P] [US1] Rename docs/module-2-gazebo-unity/unity-robotics.md to docs/module-2-gazebo-unity/week-7-lesson-2-unity-robotics.md using git mv
+- [X] T022 [P] [US1] Rename docs/module-2-gazebo-unity/physics-sensors.md to docs/module-2-gazebo-unity/week-7-lesson-3-sensor-simulation.md using git mv
+- [X] T023 [P] [US1] Rename docs/module-2-gazebo-unity/simulation-physical-ai.md to docs/module-2-gazebo-unity/week-7-lesson-1-physics-simulation.md using git mv
+- [X] T024 [US1] Update frontmatter in docs/module-2-gazebo-unity/week-6-lesson-1-gazebo-setup.md (sidebar_position: 61, tags: [gazebo, week-6])
+- [X] T025 [US1] Update frontmatter in docs/module-2-gazebo-unity/week-7-lesson-1-physics-simulation.md (sidebar_position: 71, tags: [gazebo, unity, week-7])
+- [X] T026 [US1] Update frontmatter in docs/module-2-gazebo-unity/week-7-lesson-2-unity-robotics.md (sidebar_position: 72, tags: [unity, week-7])
+- [X] T027 [US1] Update frontmatter in docs/module-2-gazebo-unity/week-7-lesson-3-sensor-simulation.md (sidebar_position: 73, tags: [sensors, week-7])
+- [X] T028 [P] [US1] Rename docs/module-3-isaac/isaac-sim.md to docs/module-3-isaac/week-8-lesson-1-isaac-sim-setup.md using git mv
+- [X] T029 [P] [US1] Rename docs/module-3-isaac/perception-pipelines.md to docs/module-3-isaac/week-9-lesson-1-ai-perception.md using git mv
+- [X] T030 [P] [US1] Rename docs/module-3-isaac/nav-manipulation.md to docs/module-3-isaac/week-9-lesson-2-manipulation.md using git mv
+- [X] T031 [P] [US1] Rename docs/module-3-isaac/isaac-physical-ai.md to docs/module-3-isaac/week-10-lesson-2-sim-to-real.md using git mv
+- [X] T032 [US1] Update frontmatter in docs/module-3-isaac/week-8-lesson-1-isaac-sim-setup.md (sidebar_position: 81, tags: [isaac, week-8])
+- [X] T033 [US1] Update frontmatter in docs/module-3-isaac/week-9-lesson-1-ai-perception.md (sidebar_position: 91, tags: [isaac, perception, week-9])
+- [X] T034 [US1] Update frontmatter in docs/module-3-isaac/week-9-lesson-2-manipulation.md (sidebar_position: 92, tags: [isaac, manipulation, week-9])
+- [X] T035 [US1] Update frontmatter in docs/module-3-isaac/week-10-lesson-2-sim-to-real.md (sidebar_position: 102, tags: [isaac, sim-to-real, week-10])
+- [X] T036 [P] [US1] Rename docs/module-4-vla/vla-architectures.md to docs/module-4-vla/week-11-lesson-1-humanoid-kinematics.md using git mv
+- [X] T037 [P] [US1] Rename docs/module-4-vla/training-vla.md to docs/module-4-vla/week-12-lesson-1-manipulation-grasping.md using git mv
+- [X] T038 [P] [US1] Rename docs/module-4-vla/vla-control.md to docs/module-4-vla/week-13-lesson-1-conversational-robotics.md using git mv
+- [X] T039 [P] [US1] Rename docs/module-4-vla/vla-physical-ai.md to docs/module-4-vla/week-13-lesson-3-capstone-project.md using git mv
+- [X] T040 [US1] Update frontmatter in docs/module-4-vla/week-11-lesson-1-humanoid-kinematics.md (sidebar_position: 111, tags: [vla, kinematics, week-11])
+- [X] T041 [US1] Update frontmatter in docs/module-4-vla/week-12-lesson-1-manipulation-grasping.md (sidebar_position: 121, tags: [vla, grasping, week-12])
+- [X] T042 [US1] Update frontmatter in docs/module-4-vla/week-13-lesson-1-conversational-robotics.md (sidebar_position: 131, tags: [vla, conversation, week-13])
+- [X] T043 [US1] Update frontmatter in docs/module-4-vla/week-13-lesson-3-capstone-project.md (sidebar_position: 133, tags: [vla, capstone, week-13])
+- [X] T044 [US1] Update sidebars.ts with new hierarchical structure per plan.md (Module 1: ROS 2)
+- [X] T045 [US1] Update sidebars.ts with Module 2: Gazebo & Unity structure with week categories
+- [X] T046 [US1] Update sidebars.ts with Module 3: NVIDIA Isaac structure with week categories
+- [X] T047 [US1] Update sidebars.ts with Module 4: VLA & Capstone structure with week categories
+- [X] T048 [US1] Add Introduction section to sidebars.ts (collapsed: false)
+- [X] T049 [US1] Add Setup & Resources section to sidebars.ts
+- [X] T050 [US1] Run npm run build to validate all links and sidebar structure
 - [ ] T051 [US1] Manually test navigation: click through all 4 modules, verify next/previous works
 
 **Checkpoint**: At this point, all existing content is migrated, renamed, and navigable through the new structure

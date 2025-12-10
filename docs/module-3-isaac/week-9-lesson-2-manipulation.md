@@ -1,7 +1,9 @@
 ---
 title: Navigation and Manipulation
-sidebar_position: 4
+sidebar_label: "Lesson 2: Manipulation"
+sidebar_position: 92
 description: Implementing navigation and manipulation with Isaac
+tags: [isaac, manipulation, week-9]
 ---
 
 # Navigation and Manipulation
