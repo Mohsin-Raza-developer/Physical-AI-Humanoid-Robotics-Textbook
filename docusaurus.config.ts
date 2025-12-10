@@ -125,19 +125,19 @@ const config: Config = {
             },
             {
               label: 'ROS 2',
-              to: '/docs/ros2/intro',
+              to: '/docs/module-1-ros2/intro',
             },
             {
               label: 'Gazebo/Unity',
-              to: '/docs/gazebo-unity/intro',
+              to: '/docs/module-2-gazebo-unity/intro',
             },
             {
               label: 'Isaac',
-              to: '/docs/isaac/intro',
+              to: '/docs/module-3-isaac/intro',
             },
             {
               label: 'VLA',
-              to: '/docs/vla/intro',
+              to: '/docs/module-4-vla/intro',
             },
           ],
         },

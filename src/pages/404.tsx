@@ -45,8 +45,8 @@ export default function Error404Page(): ReactNode {
                 <ul>
                   <li><Link to="/">Return to Homepage</Link></li>
                   <li><Link to="/docs/intro">Introduction to Physical AI & Robotics</Link></li>
-                  <li><Link to="/docs/ros2/intro">Start with ROS 2</Link></li>
-                  <li><Link to="/docs/gazebo-unity/intro">Explore Simulation</Link></li>
+                  <li><Link to="/docs/module-1-ros2/intro">Start with ROS 2</Link></li>
+                  <li><Link to="/docs/module-2-gazebo-unity/intro">Explore Simulation</Link></li>
                 </ul>
               </div>
               
