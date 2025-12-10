@@ -176,6 +176,23 @@ const config: Config = {
       additionalLanguages: ['python', 'cpp', 'bash', 'json', 'yaml'],
     },
   } satisfies Preset.ThemeConfig,
+
+  themes: [
+    [
+      require.resolve("@easyops-cn/docusaurus-search-local"),
+      {
+        hashed: true,
+        language: ["en"],
+        indexDocs: true,
+        indexBlog: false,
+        indexPages: false,
+        docsRouteBasePath: "/docs",
+        highlightSearchTermsOnTargetPage: true,
+        searchResultLimits: 8,
+        searchResultContextMaxLength: 50,
+      },
+    ],
+  ],
 };
 
 export default config;
