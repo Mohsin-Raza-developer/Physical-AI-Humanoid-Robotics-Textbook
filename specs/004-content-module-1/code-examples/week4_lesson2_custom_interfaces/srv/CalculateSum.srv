@@ -1,0 +1,7 @@
+# Request (request data)
+float64 first_number
+float64 second_number
+---
+# Response (response data)
+float64 sum
+string error_message
