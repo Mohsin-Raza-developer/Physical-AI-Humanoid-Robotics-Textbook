@@ -1,0 +1,22 @@
+# Parameter configuration file for ROS 2 launch example
+# Used in Week 5 Lesson 1 (Launch Files)
+
+talker_node:
+  ros__parameters:
+    topic_name: "chatter"
+    publish_freq: 1.0  # Hz
+    message_content: "Hello World"
+
+listener_node:
+  ros__parameters:
+    topic_name: "chatter"
+    queue_size: 10
+
+param_server:
+  ros__parameters:
+    param_a: "value_a"
+    param_b: 42
+    param_c: true
+    nested_params:
+      sub_param1: "nested_value1"
+      sub_param2: 123
