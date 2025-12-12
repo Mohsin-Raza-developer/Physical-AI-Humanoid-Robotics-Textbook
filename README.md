@@ -1,163 +1,104 @@
-# Physical AI & Humanoid Robotics Textbook
+# 🤖 Physical AI & Humanoid Robotics Textbook
 
-Interactive textbook for Physical AI and Humanoid Robotics education.
+📚 Interactive textbook for learning [**Physical AI and Humanoid Robotics development**](https://mohsin-raza-developer.github.io/Physical-AI-Humanoid-Robotics-Textbook/) with ROS 2, Gazebo, Isaac Sim, and Vision-Language-Action models.
+
+![Banner](banner.png)
+
+[![Build Status](https://img.shields.io/github/actions/workflow/status/Mohsin-Raza-developer/Physical-AI-Humanoid-Robotics-Textbook/build.yml?style=for-the-badge)](https://github.com/Mohsin-Raza-developer/Physical-AI-Humanoid-Robotics-Textbook/actions)
+[![License](https://img.shields.io/github/license/Mohsin-Raza-developer/Physical-AI-Humanoid-Robotics-Textbook?style=for-the-badge)](LICENSE)
+[![Deployment Status](https://img.shields.io/github/deployments/Mohsin-Raza-developer/Physical-AI-Humanoid-Robotics-Textbook/github-pages?style=for-the-badge)](https://mohsin-raza-developer.github.io/Physical-AI-Humanoid-Robotics-Textbook/)
+[![Last Commit](https://img.shields.io/github/last-commit/Mohsin-Raza-developer/Physical-AI-Humanoid-Robotics-Textbook?style=for-the-badge)](https://github.com/Mohsin-Raza-developer/Physical-AI-Humanoid-Robotics-Textbook/commits/main)
+
+## About
+
+This open-source textbook teaches Physical AI and Humanoid Robotics fundamentals using ROS 2, Gazebo, Isaac Sim, and Vision-Language-Action models. Designed for students and professionals seeking to master embodied artificial intelligence and robot control systems.
+
+**🚀 Live Textbook**: [Physical AI & Humanoid Robotics Textbook](https://mohsin-raza-developer.github.io/Physical-AI-Humanoid-Robotics-Textbook/)
 
 ## Features
 
-- 4 comprehensive modules covering ROS 2, Gazebo/Unity, Isaac, and Vision-Language-Action (VLA) models
-- Premium UI/UX with responsive design for all device sizes
-- Syntax highlighting for Python, C++, URDF, and XML code examples
-- Dark/light mode toggle with system preference detection
-- WCAG 2.1 AA accessibility compliance
-- GitHub Pages deployment with automated CI/CD
+- ✅ **Interactive Docusaurus-based textbook** - Rich, navigable content with search functionality
+- ✅ **13-week structured curriculum** - Comprehensive learning path from basics to advanced concepts
+- ✅ **Hands-on ROS 2, Gazebo, Isaac Sim tutorials** - Practical exercises with real-world applications
+- ✅ **Real-world humanoid robotics examples** - Application-focused learning with industry-relevant scenarios
+- 🚧 **RAG Chatbot (Coming Soon)** - AI-powered learning assistant with course content access
+- 🚧 **Personalized content (Coming Soon)** - Adaptive learning paths based on skill level and interests
+
+## Modules
+
+| Module | Title | Description |
+|--------|-------|-------------|
+| 1 | **ROS 2 Fundamentals** | Learn ROS 2 architecture, nodes, topics, services, actions, launch files, and URDF for robot modeling |
+| 2 | **Simulation with Gazebo/Unity** | Master robot simulation environments, physics engines, sensor modeling, and world creation |
+| 3 | **Isaac Robot Framework** | Build and deploy robotic applications using NVIDIA Isaac Sim with comprehensive robot models |
+| 4 | **Vision-Language-Action Models** | Explore VLA models for embodied AI and real-world interaction capabilities |
 
 ## Tech Stack
 
-- [Docusaurus v3](https://docusaurus.io/) - Static site generator optimized for documentation
-- [React](https://reactjs.org/) - Component-based UI library
-- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
-- [TypeScript](https://www.typescriptlang.org/) - Typed superset of JavaScript
-- [Node.js](https://nodejs.org/) - JavaScript runtime environment
-- [GitHub Actions](https://github.com/features/actions) - Automated deployment
+- **Documentation Framework**: Docusaurus v3 for static site generation
+- **Robotics Framework**: ROS 2 Humble Hawksbill (LTS)
+- **Programming Languages**: Python 3.10+, C++
+- **Visualization**: Mermaid.js for diagrams and charts
+- **Deployment**: GitHub Pages
+- **CI/CD**: GitHub Actions for automated builds and deployments
 
-## Local Development
+## Getting Started
 
-### Prerequisites
+### View Online
 
-- [Node.js](https://nodejs.org/en/download/) version 20.0 or above
-- [npm](https://www.npmjs.com/) package manager (comes with Node.js)
+Visit the live textbook at: [https://mohsin-raza-developer.github.io/Physical-AI-Humanoid-Robotics-Textbook/](https://mohsin-raza-developer.github.io/Physical-AI-Humanoid-Robotics-Textbook/)
 
-### Installation
+### Local Development
 
-1. Clone the repository:
+To run the textbook locally for development or offline viewing:
+
+1. **Clone the repository:**
    ```bash
    git clone https://github.com/Mohsin-Raza-developer/Physical-AI-Humanoid-Robotics-Textbook.git
    cd Physical-AI-Humanoid-Robotics-Textbook
    ```
 
-2. Install dependencies:
+2. **Install dependencies:**
    ```bash
    npm install
    ```
 
-3. Start the development server:
+3. **Start development server:**
    ```bash
    npm start
    ```
 
-This command starts a local development server and opens the application in your browser. Most changes are reflected live without restarting the server.
+4. **Open your browser** and navigate to [http://localhost:3000](http://localhost:3000)
 
-### Project Structure
+### Build for Production
 
-```
-Physical-AI-Humanoid-Robotics-Textbook/
-├── docs/                       # Documentation content (see CONTENT_STRUCTURE.md)
-│   ├── intro/                  # Introduction (Weeks 1-2)
-│   ├── module-1-ros2/          # ROS 2 module (Weeks 3-5)
-│   ├── module-2-gazebo-unity/  # Gazebo/Unity module (Weeks 6-7)
-│   ├── module-3-isaac/         # Isaac framework (Weeks 8-10)
-│   ├── module-4-vla/           # VLA & Capstone (Weeks 11-13)
-│   ├── setup/                  # Hardware & software setup guides
-│   └── resources/              # Glossary, references, additional reading
-├── src/                        # Custom React components and styles
-│   ├── components/             # Reusable React components
-│   ├── pages/                  # Custom pages
-│   ├── css/                    # Custom styles
-│   └── theme/                  # Custom theme components
-├── static/                     # Static assets (images, files)
-├── specs/                      # Design specifications and documentation
-├── .github/                    # GitHub Actions workflows
-├── docusaurus.config.ts        # Docusaurus configuration
-├── sidebars.ts                 # Navigation sidebar configuration
-├── CONTENT_STRUCTURE.md        # Content organization guide (READ THIS!)
-└── package.json                # Dependencies and scripts
-```
-
-**📚 For Content Authors:** See [CONTENT_STRUCTURE.md](./CONTENT_STRUCTURE.md) for detailed information about:
-- File naming conventions (`week-X-lesson-Y-topic.md`)
-- Folder structure and organization
-- Frontmatter requirements
-- Sidebar position system
-- Content creation guidelines
-
-## Contributing
-
-### Adding Content
-
-1. Create a new markdown file in the appropriate module directory (e.g., `docs/ros2/new-topic.md`)
-2. Include frontmatter metadata:
-   ```markdown
-   ---
-   title: New Topic
-   sidebar_position: 1
-   description: Description of the new topic
-   ---
-   
-   # New Topic
-   
-   Content goes here...
-   ```
-3. Add your content using Markdown syntax
-4. Update the sidebar by modifying `sidebars.ts` if needed
-
-### Adding Code Examples
-
-Code blocks with appropriate language tags will be automatically syntax-highlighted:
-
-```python
-# Python example
-import rospy
-from geometry_msgs.msg import Twist
-
-def move_robot():
-    # Implementation here
-    pass
-```
-
-Available syntax highlighting languages include:
-- `python` - Python code examples
-- `cpp` - C++ code examples
-- `xml` - XML and URDF files
-- `bash` - Shell commands
-- `json` - JSON examples
-- `yaml` - YAML examples
-
-### Custom Components
-
-To add a new custom component:
-1. Create the component in `src/components/`
-2. Export it properly
-3. Import and use in your documentation pages
-
-## Building for Production
-
-To build the website for production:
+To build the static site for deployment:
 
 ```bash
 npm run build
 ```
 
-This command generates static content into the `build` directory and can be served using any static content hosting service.
+## Contributing
 
-## Deployment
+We welcome contributions to improve this textbook! 
 
-The site is configured for deployment to GitHub Pages using GitHub Actions. The workflow is defined in `.github/workflows/deploy.yml`.
+### How to Help
 
-Changes pushed to the `main` branch will trigger an automatic deployment to the GitHub Pages site.
+- **Report Issues**: Found a typo, error, or have a suggestion? [Open an issue](https://github.com/Mohsin-Raza-developer/Physical-AI-Humanoid-Robotics-Textbook/issues/new)
+- **Submit Fixes**: Fork the repository, make improvements, and create a pull request
+- **Add Content**: Contribute new lessons, exercises, or examples
+- **Review Content**: Help review and improve existing content for accuracy and clarity
 
-## Accessibility
-
-This website follows WCAG 2.1 AA accessibility guidelines:
-- Sufficient color contrast in both light and dark modes
-- Semantic HTML structure
-- Keyboard navigation support
-- Responsive design for various screen sizes
-- Screen reader compatibility
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Support
+## Acknowledgments
 
-For questions or issues, please open an issue on the GitHub repository.
+- **Docusaurus** - Static site generator for documentation
+- **ROS 2 Community** - Robot Operating System developers and maintainers
+- **Open Robotics** - For the continued development of ROS ecosystem
+- **NVIDIA Isaac** - For the Isaac Sim platform
+- **GitHub Pages** - For hosting the live textbook
+- **All contributors** - For improving the quality and accuracy of this textbook

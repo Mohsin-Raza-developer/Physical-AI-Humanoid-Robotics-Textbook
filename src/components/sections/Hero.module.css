@@ -58,6 +58,118 @@
   animation-fill-mode: backwards;
 }
 
+/* Professional Button Styling for Hero Section */
+.heroPrimaryButton {
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #7c3aed 100%) !important;
+  background-size: 400% 400% !important;
+  animation: gradientShift 8s ease infinite !important;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.1),
+    0 2px 4px rgba(30, 64, 175, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  border-radius: 10px !important;
+  position: relative !important;
+  overflow: hidden !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.2px !important;
+  text-transform: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  padding: 0.75rem 1.8rem !important;
+  font-size: 1.05rem !important;
+  z-index: 1 !important;
+}
+
+.heroPrimaryButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent) !important;
+  transition: 0.5s !important;
+  z-index: -1 !important;
+}
+
+.heroPrimaryButton:hover::before {
+  left: 100% !important;
+}
+
+.heroPrimaryButton:hover {
+  transform: translateY(-3px) !important;
+  box-shadow:
+    0 6px 15px rgba(30, 64, 175, 0.3),
+    0 4px 10px rgba(30, 64, 175, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+  animation: gradientShift 4s ease infinite !important;
+  background-size: 200% 200% !important;
+  z-index: 10 !important;
+}
+
+/* Professional secondary button styling */
+.heroSecondaryButton {
+  background: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.1),
+    0 2px 4px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  border-radius: 10px !important;
+  position: relative !important;
+  overflow: hidden !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.2px !important;
+  text-transform: none !important;
+  padding: 0.75rem 1.8rem !important;
+  font-size: 1.05rem !important;
+  z-index: 1 !important;
+}
+
+.heroSecondaryButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent) !important;
+  transition: 0.5s !important;
+  z-index: -1 !important;
+}
+
+.heroSecondaryButton:hover::before {
+  left: 100% !important;
+}
+
+.heroSecondaryButton:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  transform: translateY(-3px) !important;
+  box-shadow:
+    0 6px 15px rgba(0, 0, 0, 0.15),
+    0 4px 10px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  z-index: 10 !important;
+}
+
+/* Button text styling */
+.heroButtons .inline-flex {
+  text-decoration: none !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+}
+
+/* Gradient animation for primary button */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 /* Keyframe Animations */
 @keyframes fadeIn {
   from {
