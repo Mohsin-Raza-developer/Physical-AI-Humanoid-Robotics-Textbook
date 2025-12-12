@@ -23,6 +23,7 @@ export default function Hero(): JSX.Element {
               icon={<RocketLaunchIcon />}
               iconPosition="left"
               ariaLabel="Start learning Physical AI and Humanoid Robotics"
+              className={styles.heroPrimaryButton}
             >
               Get Started
             </Button>
@@ -33,6 +34,7 @@ export default function Hero(): JSX.Element {
               icon={<CommandLineIcon />}
               iconPosition="left"
               ariaLabel="View project source code on GitHub"
+              className={styles.heroSecondaryButton}
             >
               View on GitHub
             </Button>

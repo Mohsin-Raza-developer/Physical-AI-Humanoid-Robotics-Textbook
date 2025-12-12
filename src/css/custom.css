@@ -132,3 +132,21 @@ html * {
 .animate-scale-in {
   will-change: transform, opacity;
 }
+
+/* Navbar Logo Sizing */
+.navbar__logo img {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+  /* Adjust vertical position - lifts the logo up */
+  margin-top: -19px; /* Lifts the logo up by 15px */
+}
+
+/* Mobile adjustments for navbar logo */
+@media (max-width: 768px) {
+  .navbar__logo img {
+    width: 50px;
+    height: 50px;
+    margin-top: -7px; /* Lifted slightly on mobile too */
+  }
+}
