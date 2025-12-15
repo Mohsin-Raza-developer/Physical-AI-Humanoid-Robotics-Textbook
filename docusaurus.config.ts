@@ -1,5 +1,5 @@
-import {themes as prismThemes} from 'prism-react-renderer';
-import type {Config} from '@docusaurus/types';
+import { themes as prismThemes } from 'prism-react-renderer';
+import type { Config } from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
@@ -82,6 +82,7 @@ const config: Config = {
     ],
   ],
 
+
   themeConfig: {
     // Replace with your project's social card
     image: 'img/docusaurus-social-card.png',
@@ -89,8 +90,13 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     metadata: [
-      {name: 'keywords', content: 'Physical AI, Humanoid Robotics, ROS 2, Gazebo, Isaac Sim, VLA, robotics education, AI robotics'},
-      {name: 'author', content: 'Physical AI & Humanoid Robotics Textbook Team'},
+      { name: 'keywords', content: 'Physical AI, Humanoid Robotics, ROS 2, Gazebo, Isaac Sim, VLA, robotics education, AI robotics' },
+      { name: 'author', content: 'Physical AI & Humanoid Robotics Textbook Team' },
+    ],
+
+    // Environment variables to pass to the client
+    clientModules: [
+      require.resolve('./src/clientModules/envClient.js'),
     ],
     navbar: {
       title: 'Physical AI & Humanoid Robotics',
@@ -105,7 +111,7 @@ const config: Config = {
           position: 'left',
           label: 'Textbook',
         },
-        {to: '/docs/intro', label: 'Introduction', position: 'left'},
+        { to: '/docs/intro', label: 'Introduction', position: 'left' },
         {
           href: 'https://github.com/Mohsin-Raza-developer/Physical-AI-Humanoid-Robotics-Textbook',
           label: 'GitHub',
@@ -177,22 +183,6 @@ const config: Config = {
     },
   } satisfies Preset.ThemeConfig,
 
-  themes: [
-    [
-      require.resolve("@easyops-cn/docusaurus-search-local"),
-      {
-        hashed: true,
-        language: ["en"],
-        indexDocs: true,
-        indexBlog: false,
-        indexPages: false,
-        docsRouteBasePath: "/docs",
-        highlightSearchTermsOnTargetPage: true,
-        searchResultLimits: 8,
-        searchResultContextMaxLength: 50,
-      },
-    ],
-  ],
 };
 
 export default config;

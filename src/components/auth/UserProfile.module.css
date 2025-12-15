@@ -1,0 +1,250 @@
+/* Glassmorphism Classic Professional Design */
+
+.container {
+    padding: 60px 20px;
+    min-height: 80vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    background: radial-gradient(circle at top right, rgba(var(--ifm-color-primary-rgb), 0.1), transparent 40%),
+        radial-gradient(circle at bottom left, rgba(var(--ifm-color-primary-rgb), 0.05), transparent 40%);
+}
+
+.card {
+    width: 100%;
+    max-width: 900px;
+    background: var(--ifm-card-background-color);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+    border: 1px solid var(--ifm-color-emphasis-200);
+    box-shadow: 0 20px 80px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header Section with Classical Gradient */
+.header {
+    padding: 60px 40px 40px;
+    background: linear-gradient(135deg, var(--ifm-color-primary-darker) 0%, var(--ifm-color-primary) 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    position: relative;
+}
+
+.header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.1), transparent);
+}
+
+.avatarContainer {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: white;
+    color: var(--ifm-color-primary-darker);
+    font-size: 48px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    border: 4px solid rgba(255, 255, 255, 0.2);
+}
+
+.info {
+    flex: 1;
+}
+
+.name {
+    font-size: 36px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    color: white;
+    letter-spacing: -0.5px;
+}
+
+.role {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 6px 16px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 500;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Content Grid */
+.content {
+    padding: 40px;
+    background: var(--ifm-background-color);
+}
+
+.sectionLabel {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--ifm-color-emphasis-600);
+    margin-bottom: 24px;
+    font-weight: 700;
+    border-bottom: 1px solid var(--ifm-color-emphasis-200);
+    padding-bottom: 10px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 20px;
+    margin-bottom: 0;
+    /* Removed margin completely */
+}
+
+/* ... dataCard styles ... (keeping as is or assuming they are fine) */
+.dataCard {
+    background: var(--ifm-card-background-color);
+    border: 1px solid var(--ifm-color-emphasis-200);
+    padding: 20px;
+    /* Slightly reduced padding */
+    border-radius: 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dataCard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    border-color: var(--ifm-color-primary);
+}
+
+.iconBox {
+    width: 44px;
+    height: 44px;
+    background: var(--ifm-color-emphasis-100);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ifm-color-primary);
+}
+
+.dataContent {
+    flex: 1;
+}
+
+.label {
+    font-size: 13px;
+    color: var(--ifm-color-emphasis-600);
+    margin-bottom: 6px;
+}
+
+.value {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ifm-font-color-base);
+}
+
+/* Danger Zone Redesign */
+.dangerZone {
+    margin-top: 10px;
+    /* Reduced space */
+    border-top: 1px solid var(--ifm-color-emphasis-200);
+    padding-top: 30px;
+}
+
+.dangerBox {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    background: linear-gradient(to right, rgba(255, 235, 238, 0.5), rgba(255, 255, 255, 0.5));
+    border: 1px solid rgba(244, 67, 54, 0.3);
+    border-left: 4px solid var(--ifm-color-danger);
+    /* Accent border */
+    border-radius: 8px;
+    transition: background 0.3s ease;
+}
+
+[data-theme='dark'] .dangerBox {
+    background: linear-gradient(to right, rgba(60, 20, 20, 0.4), rgba(40, 40, 40, 0.4));
+    border-color: rgba(244, 67, 54, 0.4);
+}
+
+.dangerTitle {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ifm-color-danger);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dangerDesc {
+    font-size: 13px;
+    color: var(--ifm-color-emphasis-700);
+    margin: 0;
+}
+
+.deleteButton {
+    background: var(--ifm-color-danger);
+    /* Filled button for importance */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+    transition: all 0.2s ease;
+}
+
+.deleteButton:hover {
+    background: var(--ifm-color-danger-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(244, 67, 54, 0.4);
+}
+
+/* Loading/Error */
+.loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 60vh;
+    gap: 20px;
+    color: var(--ifm-color-emphasis-600);
+}
+
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        text-align: center;
+        padding: 40px 20px;
+    }
+
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dangerBox {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+    }
+}

@@ -67,6 +67,50 @@ docs/
 │   ├── lab-infrastructure.md
 │   └── student-kit-guide.md
 │
+├── src/                               # Source code for Docusaurus site
+│   └── components/                    # React components
+│       └── auth/                      # Authentication components
+│           ├── RegisterForm.tsx       # Registration form UI
+│           ├── LoginForm.tsx          # Login form UI
+│           ├── ResetPasswordForm.tsx  # Password reset UI
+│           ├── AccountDeletionForm.tsx # Account deletion UI
+│           ├── UserProfile.tsx        # User profile display
+│           ├── LogoutButton.tsx       # Logout button component
+│           ├── ProtectedRoute.tsx     # Route protection wrapper
+│           └── AuthProvider.tsx       # Authentication context provider
+│
+├── auth-backend/                      # Next.js backend for authentication
+│   ├── pages/                         # API routes
+│   │   └── api/
+│   │       ├── auth/
+│   │       │   ├── register.ts        # Registration endpoint
+│   │       │   ├── login.ts           # Login endpoint
+│   │       │   ├── logout.ts          # Logout endpoint
+│   │       │   └── reset-password/    # Password reset endpoints
+│   │       │       ├── request.ts     # Request reset endpoint
+│   │       │       ├── validate.ts    # Validate reset token endpoint
+│   │       │       └── complete.ts    # Complete reset endpoint
+│   │       └── users/
+│   │           └── profile.ts         # Profile endpoint
+│   ├── lib/                           # Backend utilities
+│   │   ├── auth.ts                    # Better Auth configuration
+│   │   ├── user.ts                    # User model and operations
+│   │   ├── database.ts                # Database connection
+│   │   ├── email.ts                   # Email service implementation
+│   │   ├── validation.ts              # Input validation utilities
+│   │   ├── sanitize.ts                # Input sanitization utilities
+│   │   ├── rateLimit.ts               # Rate limiting utilities
+│   │   ├── security.ts                # Security headers utilities
+│   │   └── passwordResetToken.ts      # Password reset token model
+│   ├── middleware/                    # Middleware functions
+│   │   ├── auth.ts                    # Authentication middleware
+│   │   └── cors.ts                    # CORS middleware
+│   ├── types/                         # TypeScript type definitions
+│   │   └── auth.ts                    # Authentication types
+│   ├── next.config.js                 # Next.js configuration
+│   ├── package.json                   # Dependencies for auth backend
+│   └── tsconfig.json                  # TypeScript configuration
+│
 └── resources/                         # Supplementary Resources
     ├── glossary.md
     ├── references.md

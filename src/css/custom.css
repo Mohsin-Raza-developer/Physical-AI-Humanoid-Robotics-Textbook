@@ -150,3 +150,7 @@ html * {
     margin-top: -7px; /* Lifted slightly on mobile too */
   }
 }
+
+/* Import authentication styles */
+@import '../auth-styles.css';
+
