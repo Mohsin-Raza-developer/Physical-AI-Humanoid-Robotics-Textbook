@@ -212,6 +212,8 @@ See `.specify/memory/constitution.md` for code quality, testing, performance, se
 ## Active Technologies
 - JavaScript/TypeScript with Node.js 18+ (as required by Docusaurus v3) + Docusaurus v3, React 18, Node.js 18+, Tailwind CSS 3.x, GitHub Pages (001-docusaurus-book-setup)
 - Static file storage (Markdown/MDX files for content) (001-docusaurus-book-setup)
+- TypeScript/JavaScript (for Next.js API routes), Node.js 18+ + Better Auth (v1.0+), Next.js (v14+), Neon Postgres driver, Docusaurus v3 (005-docusaurus-auth)
+- Neon Serverless Postgres database with user, session, and password reset token tables (005-docusaurus-auth)
 
 ## Recent Changes
 - 001-docusaurus-book-setup: Added JavaScript/TypeScript with Node.js 18+ (as required by Docusaurus v3) + Docusaurus v3, React 18, Node.js 18+, Tailwind CSS 3.x, GitHub Pages

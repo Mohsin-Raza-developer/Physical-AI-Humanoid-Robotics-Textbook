@@ -21,8 +21,50 @@ This open-source textbook teaches Physical AI and Humanoid Robotics fundamentals
 - ✅ **13-week structured curriculum** - Comprehensive learning path from basics to advanced concepts
 - ✅ **Hands-on ROS 2, Gazebo, Isaac Sim tutorials** - Practical exercises with real-world applications
 - ✅ **Real-world humanoid robotics examples** - Application-focused learning with industry-relevant scenarios
+- ✅ **User Authentication System** - Secure registration, login, password reset, and account management
 - 🚧 **RAG Chatbot (Coming Soon)** - AI-powered learning assistant with course content access
 - 🚧 **Personalized content (Coming Soon)** - Adaptive learning paths based on skill level and interests
+
+## Authentication System
+
+The textbook includes a comprehensive authentication system built with:
+
+- **Frontend**: Docusaurus integration with React components
+- **Backend**: Next.js API routes with Better Auth
+- **Database**: Neon Postgres for user data storage
+- **Email Service**: Resend for password reset notifications
+
+### Key Features
+
+1. **User Registration**
+   - Email and password registration with onboarding questions
+   - Password strength validation and feedback
+   - GDPR-compliant data handling
+
+2. **User Login & Session Management**
+   - Secure login with email and password
+   - Persistent sessions with 30-day timeout
+   - Seamless integration with Docusaurus pages
+
+3. **Password Reset**
+   - Secure reset tokens with 1-hour expiration
+   - Email-based reset flow
+   - Strong password enforcement
+
+4. **Account Management**
+   - User profile management
+   - GDPR-compliant account deletion
+   - Email notifications for important actions
+
+### Security Features
+
+- Rate limiting on authentication endpoints
+- Input sanitization to prevent injection attacks
+- Password strength enforcement
+- Secure password hashing with bcrypt
+- Content Security Policy headers
+- HTTP Strict Transport Security (HSTS)
+- Frameguard to prevent clickjacking
 
 ## Modules
 
@@ -36,10 +78,14 @@ This open-source textbook teaches Physical AI and Humanoid Robotics fundamentals
 ## Tech Stack
 
 - **Documentation Framework**: Docusaurus v3 for static site generation
+- **Authentication System**: Next.js API routes with Better Auth for session management
 - **Robotics Framework**: ROS 2 Humble Hawksbill (LTS)
-- **Programming Languages**: Python 3.10+, C++
+- **Programming Languages**: Python 3.10+, C++, TypeScript/JavaScript
+- **Database**: Neon Serverless Postgres for user data storage
+- **Email Service**: Resend for password reset notifications
 - **Visualization**: Mermaid.js for diagrams and charts
-- **Deployment**: GitHub Pages
+- **Deployment**: GitHub Pages for frontend, Vercel for backend API
+- **Security**: Rate limiting, input sanitization, and security headers
 - **CI/CD**: GitHub Actions for automated builds and deployments
 
 ## Getting Started
