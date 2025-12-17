@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from './AuthProvider';
 
@@ -27,11 +27,114 @@ interface FormData {
   step2: Step2Data;
 }
 
-const NEXT_PUBLIC_API_BASE_URL = typeof window !== 'undefined'
-  ? (window as any).env?.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3002'
-  : process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3002'; // Backend runs on port 3002
+import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
+
+// --- Helper Components ---
+
+interface SelectionGridProps {
+  label: string;
+  options: string[];
+  selectedValue: string;
+  onChange: (value: string) => void;
+  error?: string;
+  gridClass?: string;
+}
+
+const SelectionGrid: React.FC<SelectionGridProps> = ({ label, options, selectedValue, onChange, error, gridClass = "" }) => (
+  <div className="form-group">
+    <label className="selection-label">{label}</label>
+    <div className={`selection-grid ${gridClass}`}>
+      {options.map((option) => (
+        <div
+          key={option}
+          className={`selection-card ${selectedValue === option ? 'selected' : ''}`}
+          onClick={() => onChange(option)}
+        >
+          <div className="selection-content">
+            <span className="selection-text">{option}</span>
+          </div>
+          {selectedValue === option && <div className="selection-check">✓</div>}
+        </div>
+      ))}
+    </div>
+    {error && <div className="field-error">{error}</div>}
+  </div>
+);
+
+interface FormInputProps {
+  icon: string;
+  type?: string;
+  name: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder: string;
+  error?: string;
+  status?: 'valid' | 'invalid' | 'empty';
+  inputRef?: React.RefObject<HTMLInputElement>;
+  containerClass?: string;
+  togglePassword?: {
+    show: boolean;
+    onToggle: () => void;
+  };
+}
+
+const FormInput: React.FC<FormInputProps> = ({
+  icon, type = "text", name, value, onChange, placeholder, error, status, inputRef, containerClass = "form-group", togglePassword
+}) => {
+  const inputType = togglePassword ? (togglePassword.show ? "text" : "password") : type;
+
+  return (
+    <div className={containerClass}>
+      <div className="input-wrapper">
+        <div className="input-icon">{icon}</div>
+        <input
+          ref={inputRef}
+          type={inputType}
+          id={name}
+          name={name}
+          value={value}
+          onChange={onChange}
+          required
+          placeholder={placeholder}
+          className={`${error ? 'error' : ''} ${status && status !== 'empty' ? (status === 'valid' ? 'valid' : 'invalid') : ''}`}
+          aria-describedby={error ? `${name}-error` : undefined}
+        />
+
+        {togglePassword && (
+          <button
+            type="button"
+            className="password-toggle"
+            onClick={togglePassword.onToggle}
+            tabIndex={-1}
+          >
+            {togglePassword.show ? (
+              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+            ) : (
+              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+            )}
+          </button>
+        )}
+
+        {status && status !== 'empty' && !togglePassword && (
+          <div className={`input-status ${status}`}>
+            {status === 'valid' ? '✓' : '✗'}
+          </div>
+        )}
+      </div>
+      {error && <div id={`${name}-error`} className="field-error">{error}</div>}
+    </div>
+  );
+};
+
 
 const RegisterMultiStepForm: React.FC<RegisterMultiStepFormProps> = ({ onSuccess }) => {
+  const { siteConfig } = useDocusaurusContext();
+  const apiBaseUrl = (siteConfig.customFields?.apiBaseUrl as string) || 'http://localhost:3002';
+
+  useEffect(() => {
+    console.log('RegisterForm using API:', apiBaseUrl);
+  }, [apiBaseUrl]);
+
   const { login } = useAuth();
   const [step, setStep] = useState<number>(1);
   const [formData, setFormData] = useState<FormData>({
@@ -165,12 +268,12 @@ const RegisterMultiStepForm: React.FC<RegisterMultiStepFormProps> = ({ onSuccess
     return strength;
   };
 
-  const getPasswordStrengthClass = () => {
+  const getPasswordStrengthState = () => {
     const strength = getPasswordStrength();
-    if (strength <= 1) return 'weak';
-    if (strength <= 3) return 'medium';
-    if (strength >= 4) return 'strong';
-    return 'empty';
+    if (strength === 0) return { filled: 0, label: 'empty' };
+    if (strength <= 2) return { filled: 1, label: 'weak' };
+    if (strength === 3) return { filled: 2, label: 'medium' };
+    return { filled: 4, label: 'strong' };
   };
 
   const getPasswordStrengthText = () => {
@@ -224,7 +327,7 @@ const RegisterMultiStepForm: React.FC<RegisterMultiStepFormProps> = ({ onSuccess
     // Check if email is already registered
     setLoading(true);
     try {
-      const response = await axios.post(`${NEXT_PUBLIC_API_BASE_URL}/api/auth/check-email`, {
+      const response = await axios.post(`${apiBaseUrl}/api/auth/check-email`, {
         email: formData.step1.email
       });
 
@@ -256,7 +359,7 @@ const RegisterMultiStepForm: React.FC<RegisterMultiStepFormProps> = ({ onSuccess
     setSuccessMessage('');
 
     try {
-      const response = await axios.post(`${NEXT_PUBLIC_API_BASE_URL}/api/auth/register`, {
+      const response = await axios.post(`${apiBaseUrl}/api/auth/register`, {
         firstName: formData.step1.firstName,
         lastName: formData.step1.lastName,
         email: formData.step1.email,
@@ -268,7 +371,7 @@ const RegisterMultiStepForm: React.FC<RegisterMultiStepFormProps> = ({ onSuccess
       if (response.status === 201) {
         // Automatically log in the user after successful registration
         try {
-          const loginResponse = await axios.post(`${NEXT_PUBLIC_API_BASE_URL}/api/auth/login`, {
+          const loginResponse = await axios.post(`${apiBaseUrl}/api/auth/login`, {
             email: formData.step1.email,
             password: formData.step1.password,
           });
@@ -281,6 +384,7 @@ const RegisterMultiStepForm: React.FC<RegisterMultiStepFormProps> = ({ onSuccess
               email: loginResponse.data.data?.email,
               firstName: loginResponse.data.data?.firstName,
               lastName: loginResponse.data.data?.lastName,
+              token: loginResponse.data.data?.token // Pass token to AuthProvider
             };
 
             login(userData);
@@ -367,146 +471,81 @@ const RegisterMultiStepForm: React.FC<RegisterMultiStepFormProps> = ({ onSuccess
           <h3>Account Information</h3>
 
           <div className="form-row">
-            <div className="form-group half-width">
-              <div className="input-wrapper">
-                <div className="input-icon">👤</div>
-                <input
-                  type="text"
-                  name="firstName"
-                  value={formData.step1.firstName}
-                  onChange={handleChangeStep1}
-                  required
-                  placeholder="First Name"
-                  className={`${errors.firstName ? 'error' : ''}`}
-                />
-              </div>
-              {errors.firstName && <div className="field-error">{errors.firstName}</div>}
-            </div>
+            <FormInput
+              icon="👤"
+              name="firstName"
+              value={formData.step1.firstName}
+              onChange={handleChangeStep1}
+              placeholder="First Name"
+              error={errors.firstName}
+              status={fieldStatus.firstName}
+              containerClass="form-group half-width"
+            />
 
-            <div className="form-group half-width">
-              <div className="input-wrapper">
-                <div className="input-icon">👤</div>
-                <input
-                  type="text"
-                  name="lastName"
-                  value={formData.step1.lastName}
-                  onChange={handleChangeStep1}
-                  required
-                  placeholder="Last Name"
-                  className={`${errors.lastName ? 'error' : ''}`}
-                />
-              </div>
-              {errors.lastName && <div className="field-error">{errors.lastName}</div>}
-            </div>
+            <FormInput
+              icon="👤"
+              name="lastName"
+              value={formData.step1.lastName}
+              onChange={handleChangeStep1}
+              placeholder="Last Name"
+              error={errors.lastName}
+              status={fieldStatus.lastName}
+              containerClass="form-group half-width"
+            />
           </div>
 
-          <div className="form-group">
-            <div className="input-wrapper">
-              <div className="input-icon">📨</div>
-              <input
-                ref={emailRef}
-                type="email"
-                id="email"
-                name="email"
-                value={formData.step1.email}
-                onChange={handleChangeStep1}
-                required
-                placeholder="Enter your email address"
-                className={`${errors.email ? 'error' : ''} ${fieldStatus.email !== 'empty' ? (fieldStatus.email === 'valid' ? 'valid' : 'invalid') : ''}`}
-                aria-describedby={errors.email ? "email-error" : undefined}
-              />
-              {fieldStatus.email !== 'empty' && (
-                <div className={`input-status ${fieldStatus.email}`}>
-                  {fieldStatus.email === 'valid' ? '✓' : '✗'}
-                </div>
-              )}
+          <FormInput
+            icon="📨"
+            type="email"
+            name="email"
+            value={formData.step1.email}
+            onChange={handleChangeStep1}
+            placeholder="Enter your email address"
+            error={errors.email}
+            status={fieldStatus.email}
+            inputRef={emailRef}
+          />
+
+          <FormInput
+            icon="🔒"
+            name="password"
+            value={formData.step1.password}
+            onChange={handleChangeStep1}
+            placeholder="Create a password"
+            error={errors.password}
+            status={fieldStatus.password}
+            togglePassword={{
+              show: showPassword,
+              onToggle: () => setShowPassword(!showPassword)
+            }}
+          />
+
+          <div className="password-strength-container">
+            <div className="strength-label">Password strength:</div>
+            <div className="strength-bars">
+              {(() => {
+                const { filled, label } = getPasswordStrengthState();
+                return [0, 1, 2, 3].map((i) => (
+                  <div key={i} className={`strength-bar ${i < filled ? label : ''}`} />
+                ));
+              })()}
             </div>
-            {errors.email && (
-              <div id="email-error" className="field-error">
-                {errors.email}
-              </div>
-            )}
+            <div className="strength-text">{getPasswordStrengthText()}</div>
           </div>
 
-          <div className="form-group">
-            <div className="input-wrapper">
-              <div className="input-icon">🔒</div>
-              <input
-                type={showPassword ? "text" : "password"}
-                id="password"
-                name="password"
-                value={formData.step1.password}
-                onChange={handleChangeStep1}
-                required
-                placeholder="Create a password"
-                className={`${errors.password ? 'error' : ''} ${fieldStatus.password !== 'empty' ? (fieldStatus.password === 'valid' ? 'valid' : 'invalid') : ''}`}
-                aria-describedby={errors.password ? "password-error" : undefined}
-              />
-              <button
-                type="button"
-                className="password-toggle"
-                onClick={() => setShowPassword(!showPassword)}
-                tabIndex={-1}
-              >
-                {showPassword ? (
-                  <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
-                ) : (
-                  <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                )}
-              </button>
-            </div>
-
-            <div className="password-strength-container">
-              <div className="strength-label">Password strength:</div>
-              <div className="strength-bars">
-                <div className={`strength-bar ${getPasswordStrengthClass()}`}></div>
-                <div className={`strength-bar ${getPasswordStrengthClass()}`}></div>
-                <div className={`strength-bar ${getPasswordStrengthClass()}`}></div>
-                <div className={`strength-bar ${getPasswordStrengthClass()}`}></div>
-              </div>
-              <div className="strength-text">{getPasswordStrengthText()}</div>
-            </div>
-
-            {errors.password && (
-              <div id="password-error" className="field-error">
-                {errors.password}
-              </div>
-            )}
-          </div>
-
-          <div className="form-group">
-            <div className="input-wrapper">
-              <div className="input-icon">🔒</div>
-              <input
-                type={showConfirmPassword ? "text" : "password"}
-                id="confirmPassword"
-                name="confirmPassword"
-                value={formData.step1.confirmPassword}
-                onChange={handleChangeStep1}
-                required
-                placeholder="Confirm your password"
-                className={`${errors.confirmPassword ? 'error' : ''} ${fieldStatus.confirmPassword !== 'empty' ? (fieldStatus.confirmPassword === 'valid' ? 'valid' : 'invalid') : ''}`}
-                aria-describedby={errors.confirmPassword ? "confirmPassword-error" : undefined}
-              />
-              <button
-                type="button"
-                className="password-toggle"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                tabIndex={-1}
-              >
-                {showConfirmPassword ? (
-                  <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
-                ) : (
-                  <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                )}
-              </button>
-            </div>
-            {errors.confirmPassword && (
-              <div id="confirmPassword-error" className="field-error">
-                {errors.confirmPassword}
-              </div>
-            )}
-          </div>
+          <FormInput
+            icon="🔒"
+            name="confirmPassword"
+            value={formData.step1.confirmPassword}
+            onChange={handleChangeStep1}
+            placeholder="Confirm your password"
+            error={errors.confirmPassword}
+            status={fieldStatus.confirmPassword}
+            togglePassword={{
+              show: showConfirmPassword,
+              onToggle: () => setShowConfirmPassword(!showConfirmPassword)
+            }}
+          />
 
           <div className="button-group">
             <button
@@ -525,48 +564,23 @@ const RegisterMultiStepForm: React.FC<RegisterMultiStepFormProps> = ({ onSuccess
           <h3>Personalize Your Experience</h3>
           <p className="form-subtitle">Help us tailor the content to your background and equipment.</p>
 
-          <div className="form-group">
-            <label className="selection-label">What's your software background?</label>
-            <div className="selection-grid software-grid">
-              {softwareOptions.map((option) => (
-                <div
-                  key={option}
-                  className={`selection-card ${formData.step2.softwareLevel === option ? 'selected' : ''}`}
-                  onClick={() => handleSelectionChange('softwareLevel', option)}
-                >
-                  <div className="selection-content">
-                    {/* Optional icons can go here */}
-                    <span className="selection-text">{option}</span>
-                  </div>
-                  {formData.step2.softwareLevel === option && <div className="selection-check">✓</div>}
-                </div>
-              ))}
-            </div>
-            {errors.softwareLevel && (
-              <div className="field-error">{errors.softwareLevel}</div>
-            )}
-          </div>
+          <SelectionGrid
+            label="What's your software background?"
+            options={softwareOptions}
+            selectedValue={formData.step2.softwareLevel}
+            onChange={(val) => handleSelectionChange('softwareLevel', val)}
+            error={errors.softwareLevel}
+            gridClass="software-grid"
+          />
 
-          <div className="form-group">
-            <label className="selection-label">What hardware do you have access to?</label>
-            <div className="selection-grid hardware-grid">
-              {hardwareOptions.map((option) => (
-                <div
-                  key={option}
-                  className={`selection-card ${formData.step2.hardwareAccess === option ? 'selected' : ''}`}
-                  onClick={() => handleSelectionChange('hardwareAccess', option)}
-                >
-                  <div className="selection-content">
-                    <span className="selection-text">{option}</span>
-                  </div>
-                  {formData.step2.hardwareAccess === option && <div className="selection-check">✓</div>}
-                </div>
-              ))}
-            </div>
-            {errors.hardwareAccess && (
-              <div className="field-error">{errors.hardwareAccess}</div>
-            )}
-          </div>
+          <SelectionGrid
+            label="What hardware do you have access to?"
+            options={hardwareOptions}
+            selectedValue={formData.step2.hardwareAccess}
+            onChange={(val) => handleSelectionChange('hardwareAccess', val)}
+            error={errors.hardwareAccess}
+            gridClass="hardware-grid"
+          />
 
           <div className="button-group">
             <button
@@ -603,432 +617,6 @@ const RegisterMultiStepForm: React.FC<RegisterMultiStepFormProps> = ({ onSuccess
           </div>
         )
       }
-
-      <style jsx>{`
-        /* Premium Glassmorphism Design */
-        .auth-form-container {
-          width: 100%;
-          display: flex;
-          flex-direction: column; /* Stack children vertically! */
-          justify-content: center;
-          align-items: center;
-          padding: 10px;
-        }
-
-        .step-content {
-          width: 100%;
-          max-width: 500px;
-          background: var(--ifm-card-background-color);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border-radius: 20px;
-          padding: 30px;
-          box-shadow: 0 10px 40px rgba(17, 200, 236, 0.1);
-          border: 1px solid var(--ifm-color-emphasis-200);
-          position: relative;
-          overflow: hidden;
-          animation: fadeIn 0.3s ease-in-out;
-        }
-
-        .form-header {
-          text-align: center;
-          margin-bottom: 30px;
-        }
-
-        .auth-logo {
-          height: 80px;
-          width: auto;
-          margin-bottom: 20px;
-        }
-
-        .form-header h2 {
-          margin: 15px 0 10px 0;
-          font-size: 2rem;
-          font-weight: 700;
-          background: linear-gradient(135deg, var(--ifm-color-primary-darker) 0%, var(--ifm-color-primary) 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-
-        .form-subtitle {
-          color: var(--ifm-color-emphasis-600);
-          font-size: 1.1rem;
-          margin: 0;
-        }
-
-        .step-indicator {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 30px;
-          position: relative;
-          max-width: 400px; /* Increased from 300px to prevent overlap */
-          width: 100%;
-          margin-left: auto;
-          margin-right: auto;
-        }
-
-        .step-indicator::before {
-          content: '';
-          position: absolute;
-          top: 20px;
-          left: 0;
-          right: 0;
-          height: 3px;
-          background: rgba(255, 255, 255, 0.3); /* High contrast for dark mode */
-          z-index: 1;
-          display: block;
-        }
-
-        .step {
-          text-align: center;
-          position: relative;
-          z-index: 2;
-          color: var(--ifm-color-emphasis-600);
-          /* background removed to ensure line visibility */
-          padding: 0 10px;
-        }
-
-        /* ... existing step styles ... */
-        
-        .step.active .step-number {
-          background: var(--ifm-color-primary);
-          box-shadow: 0 0 0 4px rgba(var(--ifm-color-primary-rgb), 0.2);
-        }
-
-        .step.completed .step-number {
-          background: var(--ifm-color-success);
-        }
-
-        .step-number {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          background: var(--ifm-color-emphasis-300);
-          color: white;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: 0 auto 8px;
-          font-weight: bold;
-          transition: all 0.3s ease;
-        }
-
-        .step-label {
-          font-size: 0.9rem;
-          white-space: nowrap;
-          font-weight: 500;
-        }
-
-        .selection-label {
-          display: block;
-          margin-bottom: 12px;
-          font-weight: 700;
-          color: var(--ifm-color-emphasis-700);
-          font-size: 1rem;
-        }
-
-        .selection-grid {
-          display: grid;
-          gap: 12px;
-        }
-
-        .software-grid {
-          /* Auto-fit: Columns will be at least 110px wide. If not enough space, they wrap. */
-          grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-        }
-
-        .hardware-grid {
-          grid-template-columns: repeat(2, 1fr);
-        }
-
-        /* Increase breakpoint to 600px to catch larger mobile/small tablets */
-        @media (max-width: 600px) {
-          .software-grid, .hardware-grid {
-            grid-template-columns: 1fr; /* Force single column on mobile */
-          }
-          
-          .step-label {
-              font-size: 0.8rem; /* Smaller text on mobile */
-          }
-        }
-
-        .selection-card {
-          border: 2px solid var(--ifm-color-emphasis-200);
-          border-radius: 12px;
-          padding: 16px;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          background: var(--ifm-card-background-color);
-        }
-
-        .selection-card:hover {
-          border-color: var(--ifm-color-primary);
-          background: var(--ifm-color-emphasis-100);
-        }
-
-        .selection-content {
-          flex: 1;
-          margin-right: 8px;
-        }
-
-        .selection-card.selected {
-          border-color: var(--ifm-color-primary);
-          background: rgba(var(--ifm-color-primary-rgb), 0.1);
-          box-shadow: 0 4px 12px rgba(var(--ifm-color-primary-rgb), 0.15);
-        }
-
-        .selection-text {
-          font-weight: 600;
-          font-size: 0.95rem;
-          white-space: normal;
-          line-height: 1.3;
-        }
-
-        .selection-check {
-          color: var(--ifm-color-primary);
-          font-weight: bold;
-          font-size: 1.1rem;
-        }
-
-        .input-icon {
-          position: absolute;
-          left: 16px;
-          top: 50%;
-          transform: translateY(-50%);
-          color: var(--ifm-color-primary);
-          font-size: 1.2rem;
-          z-index: 2;
-          pointer-events: none;
-          opacity: 0.7;
-          transition: opacity 0.3s;
-        }
-
-        .input-wrapper:focus-within .input-icon {
-          opacity: 1;
-        }
-
-        input {
-          width: 100%;
-          padding: 16px 16px 16px 50px;
-          border: 2px solid transparent;
-          border-radius: 12px;
-          font-size: 1rem;
-          transition: all 0.3s ease;
-          background-color: var(--ifm-color-emphasis-100);
-          color: var(--ifm-font-color-base);
-          box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
-        }
-
-        input:hover {
-          background-color: var(--ifm-color-emphasis-200);
-        }
-
-        input:focus {
-          outline: none;
-          background-color: var(--ifm-background-color);
-          border-color: var(--ifm-color-primary);
-          box-shadow: 0 0 0 4px rgba(var(--ifm-color-primary-rgb), 0.15);
-        }
-
-        input.valid {
-          border-color: var(--ifm-color-success);
-        }
-
-        input.invalid, input.error {
-          border-color: var(--ifm-color-danger);
-          background-color: var(--ifm-color-danger-lightest);
-        }
-
-        .password-toggle {
-          position: absolute;
-          right: 12px;
-          top: 50%;
-          transform: translateY(-50%);
-          background: none;
-          border: none;
-          padding: 4px;
-          cursor: pointer;
-          color: var(--ifm-color-emphasis-500);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: color 0.2s;
-          border-radius: 50%;
-          z-index: 5;
-        }
-
-        .password-toggle:hover {
-          color: var(--ifm-color-primary);
-          background-color: rgba(0,0,0,0.05);
-        }
-
-        .input-status {
-          position: absolute;
-          right: 44px;
-          top: 50%;
-          transform: translateY(-50%);
-          font-size: 1.2rem;
-          z-index: 2;
-          pointer-events: none;
-        }
-
-        .input-status.valid { color: var(--ifm-color-success); }
-        .input-status.invalid { color: var(--ifm-color-danger); }
-
-        .password-strength-container {
-          margin-top: 12px;
-          background: var(--ifm-color-emphasis-100);
-          padding: 10px;
-          border-radius: 8px;
-        }
-
-        .strength-label {
-          font-size: 0.8rem;
-          color: var(--ifm-color-emphasis-600);
-          margin-bottom: 6px;
-          display: flex;
-          justify-content: space-between;
-        }
-
-        .strength-bars {
-          display: flex;
-          gap: 4px;
-          height: 6px;
-        }
-
-        .strength-bar {
-          flex: 1;
-          height: 100%;
-          background: var(--ifm-color-emphasis-300);
-          border-radius: 3px;
-          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .strength-bar.weak { background: #ff4d4d; }
-        .strength-bar.medium { background: #faad14; }
-        .strength-bar.strong { background: #52c41a; }
-
-        .strength-text {
-          font-size: 0.8rem;
-          text-align: right;
-          margin-top: 4px;
-          font-weight: 600;
-        }
-
-        .field-error {
-          color: var(--ifm-color-danger);
-          font-size: 0.85rem;
-          margin-top: 8px;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        }
-
-        .error-toast, .success-toast {
-          display: flex;
-          align-items: center;
-          padding: 12px 16px;
-          border-radius: 8px;
-          margin-bottom: 16px;
-          animation: fadeIn 0.3s ease;
-        }
-
-        .error-toast {
-          background-color: var(--ifm-color-danger-lightest);
-          border: 1px solid var(--ifm-color-danger-light);
-        }
-
-        .success-toast {
-          background-color: var(--ifm-color-success-lightest);
-          border: 1px solid var(--ifm-color-success-light);
-        }
-
-        .error-toast-icon, .success-toast-icon {
-          margin-right: 10px;
-          font-size: 1.2rem;
-        }
-
-        .error-toast-message, .success-toast-message {
-          font-weight: 500;
-        }
-
-        .error-toast-message { color: var(--ifm-color-danger-dark); }
-        .success-toast-message { color: var(--ifm-color-success-dark); }
-
-        .button-group {
-          display: flex;
-          gap: 16px;
-          margin-top: 30px;
-        }
-
-        .primary-btn, .secondary-btn {
-          flex: 1;
-          padding: 16px;
-          border: none;
-          border-radius: 12px;
-          font-size: 1.1rem;
-          font-weight: 700;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          position: relative;
-        }
-
-        .primary-btn {
-          background: linear-gradient(135deg, var(--ifm-color-primary) 0%, var(--ifm-color-primary-darker) 100%);
-          color: white;
-          box-shadow: 0 10px 20px rgba(var(--ifm-color-primary-rgb), 0.2);
-        }
-
-        .secondary-btn {
-          background: var(--ifm-color-emphasis-200);
-          color: var(--ifm-color-emphasis-900);
-        }
-
-        .primary-btn:hover:not(:disabled) {
-          transform: translateY(-3px);
-          box-shadow: 0 15px 30px rgba(var(--ifm-color-primary-rgb), 0.3);
-        }
-
-        .secondary-btn:hover:not(:disabled) {
-          transform: translateY(-3px);
-          background: var(--ifm-color-emphasis-300);
-        }
-
-        .primary-btn:disabled, .secondary-btn:disabled {
-          background: var(--ifm-color-emphasis-300);
-          color: var(--ifm-color-emphasis-500);
-          cursor: not-allowed;
-          box-shadow: none;
-          transform: none;
-        }
-
-        @media (max-width: 480px) {
-          .step-content { padding: 24px; border-radius: 16px; }
-          .button-group { flex-direction: column; }
-          .primary-btn, .secondary-btn { width: 100%; }
-          .primary-btn, .secondary-btn { width: 100%; }
-        }
-
-        .auth-footer-link {
-          text-align: center;
-          margin-top: 24px;
-          font-size: 0.95rem;
-          color: var(--ifm-color-emphasis-700);
-        }
-
-        .auth-footer-link a {
-          font-weight: 700;
-          color: var(--ifm-color-primary);
-          text-decoration: none;
-        }
-
-        .auth-footer-link a:hover {
-          text-decoration: underline;
-        }
-      `}</style>
     </div>
   );
 };

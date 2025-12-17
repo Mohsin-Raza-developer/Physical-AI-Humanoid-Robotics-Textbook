@@ -5,35 +5,12 @@ import bcrypt from 'bcryptjs';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import type { AuthResponse, PasswordResetCompleteRequest } from '../../../../types/auth';
 import { applySecurityHeaders } from '../../../../lib/security';
+import { withCors } from '../../../../middleware/cors';
 
-export default async function handler(
+async function handler(
   req: NextApiRequest,
   res: NextApiResponse<AuthResponse>
 ) {
-  // Handle CORS preflight requests first
-  if (req.method === 'OPTIONS') {
-    const origin = req.headers.origin;
-    const allowedOrigins = [
-      process.env.CORS_ORIGIN || 'http://localhost:3000',
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://localhost:3002',
-      'https://physical-ai-humanoid-robotics-textbook.github.io'
-    ];
-
-    if (origin && allowedOrigins.includes(origin)) {
-      res.setHeader('Access-Control-Allow-Origin', origin);
-    } else {
-      res.setHeader('Access-Control-Allow-Origin', allowedOrigins[0]);
-    }
-
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Content-Length, Cache-Control');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-
-    return res.status(200).end();
-  }
-
   // Apply security headers
   applySecurityHeaders(req, res);
 
@@ -113,3 +90,5 @@ export default async function handler(
     });
   }
 }
+
+export default withCors(handler);

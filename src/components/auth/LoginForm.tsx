@@ -13,11 +13,12 @@ interface FormData {
   password: string;
 }
 
-const NEXT_PUBLIC_API_BASE_URL = typeof window !== 'undefined'
-  ? (window as any).env?.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3002'
-  : process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3002'; // Backend runs on port 3002
+import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
 const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
+  const { siteConfig } = useDocusaurusContext();
+  const apiBaseUrl = (siteConfig.customFields?.apiBaseUrl as string) || 'http://localhost:3002';
+
   const { login } = useAuth();
   const [formData, setFormData] = useState<FormData>({
     email: '',
@@ -78,7 +79,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
     setErrors({});
 
     try {
-      const response = await axios.post(`${NEXT_PUBLIC_API_BASE_URL}/api/auth/login`, formData);
+      const response = await axios.post(`${apiBaseUrl}/api/auth/login`, formData, {
+        withCredentials: true
+      });
 
       if (response.status === 200) {
         if (onLogin) onLogin();
@@ -89,6 +92,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
           email: response.data.data?.email,
           firstName: response.data.data?.firstName,
           lastName: response.data.data?.lastName,
+          token: response.data.data?.token
         };
 
         login(userData);
@@ -135,7 +139,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
     >
       <div className="form-group">
         <div className="input-wrapper">
-          <div className="input-icon">✉️</div>
+          <div className="input-icon">📨</div>
           <input
             ref={emailRef}
             type="email"

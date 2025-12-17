@@ -12,7 +12,7 @@ export const applySecurityHeaders = (req: NextApiRequest, res: NextApiResponse) 
         fontSrc: ["'self'", 'fonts.gstatic.com'],
         imgSrc: ["'self'", 'data:', 'https:'],
         scriptSrc: ["'self'"],
-        connectSrc: ["'self'", process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001'],
+        connectSrc: ["'self'", process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3002'],
       },
     },
     hsts: {

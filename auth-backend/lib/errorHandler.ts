@@ -17,7 +17,7 @@ interface ErrorResponse {
  * This catches errors and formats them in a consistent way
  */
 export const errorHandler = (
-  fn: (req: NextApiRequest, res: NextApiResponse) => Promise<void>
+  fn: NextApiHandler
 ): NextApiHandler => {
   return async (req: NextApiRequest, res: NextApiResponse) => {
     try {
@@ -142,7 +142,7 @@ export const specificErrorHandler = (handler: NextApiHandler): NextApiHandler =>
       // Handle specific error types consistently
       if (error.name === 'ValidationError') {
         // Handle validation errors
-        return sendErrorResponse(res, 400, 'Validation failed', 
+        return sendErrorResponse(res, 400, 'Validation failed',
           error.errors?.map((err: any) => ({
             field: err.path,
             message: err.message

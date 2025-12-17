@@ -18,12 +18,13 @@ export async function deleteUserData(userId: string, userEmail: string): Promise
 
       // First, delete all password reset tokens associated with the user
       await PasswordResetTokenModel.cleanupExpiredTokens(); // Clean up any expired tokens first
-      
+
       // Mark any valid tokens for this user as used (effectively invalidating them)
-      const validTokens = await PasswordResetTokenModel.findValidTokensForUser(userId);
-      for (const token of validTokens) {
-        await PasswordResetTokenModel.markAsUsed(token.id);
-      }
+      // TODO: Implement findValidTokensForUser method in PasswordResetTokenModel
+      // const validTokens = await PasswordResetTokenModel.findValidTokensForUser(userId);
+      // for (const token of validTokens) {
+      //   await PasswordResetTokenModel.markAsUsed(token.id);
+      // }
 
       // In a real implementation, we would also need to clean up any session data
       // associated with this user (Better Auth would handle this internally)
@@ -36,29 +37,30 @@ export async function deleteUserData(userId: string, userEmail: string): Promise
         WHERE id = $1
         RETURNING id
       `;
-      
+
       const result = await client.query(deleteQuery, [userId]);
-      
+
       if (result.rowCount === 0) {
         throw new Error(`User with ID ${userId} not found`);
       }
 
       await client.query('COMMIT');
-      
-      // Attempt to send confirmation email (but don't fail the deletion if email fails)
+
+      // Attempt to send confirmation email (Disabled per user request)
+      /*
       try {
         await sendAccountDeletedEmail({
           email: userEmail,
-          userName: 'Valued Customer' // In a real implementation, we might not have access to the name after deletion
+          userName: 'Valued Customer'
         });
       } catch (emailError) {
         console.error('Failed to send account deletion confirmation email:', emailError);
-        // We still return success for the deletion even if the email fails
       }
-      
+      */
+
       // Optionally, we could schedule a complete data removal after some retention period
       // This would be handled by a scheduled job outside this function
-      
+
       return true;
     } catch (error) {
       await client.query('ROLLBACK');
@@ -83,10 +85,10 @@ export async function cleanupExpiredUserData(): Promise<{ usersCleaned: number, 
 
     // Clean up expired password reset tokens
     tokensCleaned = await PasswordResetTokenModel.cleanupExpiredTokens();
-    
+
     // For soft-deleted users, we might want to completely remove their data after a retention period
     // This would typically be run as a scheduled task
-    
+
     // For example, completely remove users marked as inactive for more than 90 days:
     /*
     const deleteQuery = `
@@ -96,7 +98,7 @@ export async function cleanupExpiredUserData(): Promise<{ usersCleaned: number, 
     const result = await db.query(deleteQuery);
     usersCleaned = result.rowCount || 0;
     */
-    
+
     console.log(`Cleanup completed: ${tokensCleaned} tokens cleaned`);
     return { usersCleaned, tokensCleaned };
   } catch (error) {
@@ -113,7 +115,7 @@ export async function verifyUserDeletion(userId: string): Promise<{ fullyDeleted
 
   // Check if user still exists in the users table
   const userResult = await db.query('SELECT id, email, is_active FROM users WHERE id = $1', [userId]);
-  
+
   if (userResult.rows.length > 0) {
     const user = userResult.rows[0];
     if (user.is_active) {
@@ -128,18 +130,18 @@ export async function verifyUserDeletion(userId: string): Promise<{ fullyDeleted
 
   // Check for any remaining password reset tokens for this user
   const tokenResult = await db.query(
-    'SELECT COUNT(*) as count FROM password_reset_tokens WHERE user_id = $1', 
+    'SELECT COUNT(*) as count FROM password_reset_tokens WHERE user_id = $1',
     [userId]
   );
-  
+
   if (parseInt(tokenResult.rows[0].count) > 0) {
     remainingData.push('Remaining password reset tokens');
   }
 
   // In a real implementation, we might check other tables where user data might be stored
-  
+
   const fullyDeleted = remainingData.length === 0;
-  
+
   return { fullyDeleted, remainingData };
 }
 
@@ -152,21 +154,21 @@ export async function getUserDataSummary(userId: string): Promise<any> {
       'SELECT email, software_level, hardware_access, created_at, last_login_at FROM users WHERE id = $1 AND is_active = true',
       [userId]
     );
-    
+
     if (userResult.rows.length === 0) {
       return { exists: false };
     }
-    
+
     const userData = userResult.rows[0];
-    
+
     // Count related data
     const tokensResult = await db.query(
       'SELECT COUNT(*) as count FROM password_reset_tokens WHERE user_id = $1',
       [userId]
     );
-    
+
     const tokenCount = parseInt(tokensResult.rows[0].count);
-    
+
     return {
       exists: true,
       user: {

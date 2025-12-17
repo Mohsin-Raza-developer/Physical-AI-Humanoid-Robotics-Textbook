@@ -1,22 +1,26 @@
 import { NextApiHandler, NextApiRequest, NextApiResponse } from 'next';
 
-// CORS configuration based on the deployment architecture specified in plan.md
+// CORS configuration based on the deployment architecture
 const allowedOrigins = [
-  process.env.CORS_ORIGIN || 'http://localhost:3000', // Default to localhost for development
-  'https://physical-ai-humanoid-robotics-textbook.github.io', // Production GitHub Pages
+  // Production URLs
+  'https://physical-ai-humanoid-robotics-textbook.github.io',
+  'https://mohsin-raza-developer.github.io',
+
+  // Local Development URLs
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:3002',
+  'http://localhost:8080',
+  'http://localhost:8000',
+
+  // Environment variable override
+  ...(process.env.CORS_ORIGIN ? [process.env.CORS_ORIGIN] : [])
 ];
 
-// Check if we're in production or development to set appropriate origins
-if (process.env.NODE_ENV === 'production') {
-  allowedOrigins.push('https://physical-ai-humanoid-robotics-textbook.github.io');
-} else {
-  // In development, allow common local development ports
-  allowedOrigins.push('http://localhost:3000');
-  allowedOrigins.push('http://localhost:3001');
-  allowedOrigins.push('http://localhost:3002');
-  allowedOrigins.push('http://localhost:8080');
-  allowedOrigins.push('http://localhost:8000');
-}
+// Deduplicate the array just in case
+const uniqueAllowedOrigins = allowedOrigins.filter((value, index, self) =>
+  self.indexOf(value) === index
+);
 
 // CORS middleware function
 export const cors = (req: NextApiRequest, res: NextApiResponse) => {
@@ -25,11 +29,11 @@ export const cors = (req: NextApiRequest, res: NextApiResponse) => {
     const origin = req.headers.origin;
 
     // Check if the origin is allowed
-    if (origin && allowedOrigins.includes(origin)) {
+    if (origin && uniqueAllowedOrigins.includes(origin)) {
       res.setHeader('Access-Control-Allow-Origin', origin);
     } else {
       // If the origin isn't explicitly allowed, use the default from environment or localhost
-      res.setHeader('Access-Control-Allow-Origin', allowedOrigins[0]);
+      res.setHeader('Access-Control-Allow-Origin', uniqueAllowedOrigins[0]);
     }
 
     // Set other CORS headers as specified in deployment architecture
@@ -52,6 +56,11 @@ export const cors = (req: NextApiRequest, res: NextApiResponse) => {
 export const withCors = (handler: NextApiHandler): NextApiHandler => {
   return async (req: NextApiRequest, res: NextApiResponse) => {
     await cors(req, res);
+
+    // If headers/response sent (e.g. OPTIONS), stop here
+    if (res.writableEnded || res.headersSent) {
+      return;
+    }
 
     // Call the original handler
     return handler(req, res);

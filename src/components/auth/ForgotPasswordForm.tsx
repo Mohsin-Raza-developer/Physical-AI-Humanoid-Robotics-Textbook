@@ -7,11 +7,12 @@ interface ForgotPasswordFormProps {
   onSuccess?: () => void;
 }
 
-const NEXT_PUBLIC_API_BASE_URL = typeof window !== 'undefined'
-  ? (window as any).env?.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3002'
-  : process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3002'; // Backend runs on port 3002
+import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
 const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSuccess }) => {
+  const { siteConfig } = useDocusaurusContext();
+  const apiBaseUrl = (siteConfig.customFields?.apiBaseUrl as string) || 'http://localhost:3002';
+
   const [email, setEmail] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -24,7 +25,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSuccess }) =>
     setSuccessMessage('');
 
     try {
-      const response = await axios.post(`${NEXT_PUBLIC_API_BASE_URL}/api/auth/reset-password/request`, { email });
+      const response = await axios.post(`${apiBaseUrl}/api/auth/reset-password/request`, { email });
 
       if (response.status === 200) {
         setSuccessMessage('Password reset email sent if email exists. Please check your inbox.');
@@ -57,7 +58,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSuccess }) =>
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     if (name === 'email') setEmail(value);
-    
+
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors({
@@ -79,7 +80,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSuccess }) =>
     >
       <div className="form-group">
         <div className="input-wrapper">
-          <div className="input-icon">✉️</div>
+          <div className="input-icon">📨</div>
           <input
             type="email"
             id="email"

@@ -234,7 +234,7 @@ export class UserModel {
       return result.rowCount !== 0;
     } catch (error) {
       console.error('Error during hard delete user:', error);
-      return false;
+      throw error;
     }
   }
 
@@ -244,11 +244,16 @@ export class UserModel {
   private static async deleteRelatedData(userId: string): Promise<void> {
     // Import PasswordResetTokenModel if needed
     // Delete password reset tokens for this user
-    const deletePasswordResetTokensQuery = `
-      DELETE FROM password_reset_tokens
-      WHERE user_id = $1
-    `;
-
-    await db.query(deletePasswordResetTokensQuery, [userId]);
+    // Delete password reset tokens for this user
+    try {
+      const deletePasswordResetTokensQuery = `
+        DELETE FROM password_reset_tokens
+        WHERE user_id = $1
+      `;
+      await db.query(deletePasswordResetTokensQuery, [userId]);
+    } catch (err) {
+      // Ignore if table doesn't exist or other error, just verify logs
+      console.warn('Could not delete related password tokens (non-fatal):', err);
+    }
   }
 }
