@@ -1,14 +1,16 @@
 import { PasswordResetTokenModel } from '../../../../lib/passwordResetToken';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import type { AuthResponse, PasswordResetValidateResponse } from '../../../../types/auth';
+import { withCors } from '../../../../middleware/cors';
 
-export default async function handler(
+async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<AuthResponse>
+  res: NextApiResponse<PasswordResetValidateResponse>
 ) {
   if (req.method !== 'GET') {
     return res.status(405).json({
       success: false,
+      valid: false,
       message: 'Method not allowed',
     });
   }
@@ -66,3 +68,5 @@ export default async function handler(
     });
   }
 }
+
+export default withCors(handler);

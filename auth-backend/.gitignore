@@ -24,6 +24,12 @@ yarn-error.log*
 # Coverage directory used by tools like istanbul
 coverage/
 
+# Scripts
+/scripts
+
+# Database utility scripts (development only)
+check-db.js
+migrate-auth.js
 # Next.js specific
 .next/
 .cache/
@@ -50,3 +56,4 @@ coverage/
 secrets/
 *.key
 *.pem
+.vercel

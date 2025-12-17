@@ -1,4 +1,5 @@
 import { betterAuth } from 'better-auth';
+import { Pool } from 'pg';
 
 // Better Auth configuration with our custom requirements
 export const auth = betterAuth({
@@ -15,13 +16,15 @@ export const auth = betterAuth({
     requireEmailVerification: false, // May be changed later as needed
   },
 
-  // Database adapter for Neon Postgres
-  database: {
-    url: process.env.DATABASE_URL || "",
-  },
+  // Database adapter using pg Pool (works for both local and Neon)
+  database: new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: true, // Neon requires SSL
+  }),
 
   // Additional user fields specific to our application
   user: {
+    modelName: "users", // Tell Better Auth to use 'users' table instead of 'user'
     additionalFields: {
       software_level: {
         type: 'string',
@@ -37,14 +40,3 @@ export const auth = betterAuth({
 
 // Export the authentication instance
 export default auth;
-
-// Export helper functions for session management
-export const {
-  signIn,
-  signUp,
-  signOut,
-  getSession,
-  getAccount,
-  updateSession,
-  deleteSession
-} = auth;

@@ -1,3 +1,5 @@
 .colorModeToggle {
     margin: 0 0.5rem;
+    cursor: pointer;
+    transition: color 0.2s ease;
 }

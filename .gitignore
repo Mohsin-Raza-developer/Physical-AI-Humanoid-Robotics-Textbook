@@ -39,3 +39,14 @@ dist/
 .vscode/
 .idea/
 
+
+# Security Keys & Secrets
+*.pem
+*.key
+*.bak
+*.swp
+.vercel/
+
+# Temporary Log Files
+logs_result*.json
+

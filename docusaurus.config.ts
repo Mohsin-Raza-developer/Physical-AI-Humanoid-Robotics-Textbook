@@ -14,6 +14,11 @@ const config: Config = {
     v4: true, // Improve compatibility with the upcoming Docusaurus v4
   },
 
+  customFields: {
+    // Falls back to production URL if env var is missing
+    apiBaseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'https://auth-backend-1jl1f80dm-mohsin-raza-developers-projects.vercel.app',
+  },
+
   // Google Fonts preload for performance (ADR-003)
   headTags: [
     {
@@ -95,9 +100,7 @@ const config: Config = {
     ],
 
     // Environment variables to pass to the client
-    clientModules: [
-      require.resolve('./src/clientModules/envClient.js'),
-    ],
+    clientModules: [],
     navbar: {
       title: 'Physical AI & Humanoid Robotics',
       logo: {

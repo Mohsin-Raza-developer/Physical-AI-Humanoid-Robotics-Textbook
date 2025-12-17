@@ -49,6 +49,7 @@ export interface AuthResponse {
   success: boolean;
   message: string;
   data?: any;
+  error?: string;
   errors?: Array<{
     field: string;
     message: string;
@@ -67,6 +68,7 @@ export interface LoginResponse extends AuthResponse {
     firstName?: string;
     lastName?: string;
     sessionTimeout: number; // Session timeout in milliseconds
+    token?: string;
   };
 }
 
@@ -104,5 +106,5 @@ export interface PasswordResetValidateResponse {
 }
 
 export interface ProfileResponse extends AuthResponse {
-  data?: User;
+  data?: Omit<User, 'password_hash'>;
 }

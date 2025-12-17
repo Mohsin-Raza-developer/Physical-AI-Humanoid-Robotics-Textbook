@@ -2,34 +2,12 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { UserModel } from '../../../lib/user';
 import { validateEmail, sanitizeInput } from '../../../lib/validation';
 import { applySecurityHeaders } from '../../../lib/security';
+import { withCors } from '../../../middleware/cors';
 
-export default async function handler(
+async function handler(
     req: NextApiRequest,
     res: NextApiResponse
 ) {
-    // Handle CORS
-    if (req.method === 'OPTIONS') {
-        const origin = req.headers.origin;
-        const allowedOrigins = [
-            process.env.CORS_ORIGIN || 'http://localhost:3000',
-            'http://localhost:3000',
-            'http://localhost:3001',
-            'http://localhost:3002',
-            'https://physical-ai-humanoid-robotics-textbook.github.io'
-        ];
-
-        if (origin && allowedOrigins.includes(origin)) {
-            res.setHeader('Access-Control-Allow-Origin', origin);
-        } else {
-            res.setHeader('Access-Control-Allow-Origin', allowedOrigins[0]);
-        }
-
-        res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-        res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-        res.status(200).end();
-        return;
-    }
-
     applySecurityHeaders(req, res);
 
     if (req.method !== 'POST') {
@@ -60,3 +38,5 @@ export default async function handler(
         return res.status(500).json({ message: 'Internal server error' });
     }
 }
+
+export default withCors(handler);

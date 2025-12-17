@@ -15,7 +15,7 @@ class Logger {
   private static instance: Logger;
   private logLevel: 'info' | 'warn' | 'error' | 'debug' = 'info';
 
-  private constructor() {}
+  private constructor() { }
 
   public static getInstance(): Logger {
     if (!Logger.instance) {
@@ -116,7 +116,7 @@ export class MetricsTracker {
   private static instance: MetricsTracker;
   private metrics: Map<string, number> = new Map();
 
-  private constructor() {}
+  private constructor() { }
 
   public static getInstance(): MetricsTracker {
     if (!MetricsTracker.instance) {
@@ -149,37 +149,37 @@ export class MetricsTracker {
 
   public getMetricsForAPIEndpoint(): Record<string, number> {
     const result: Record<string, number> = {};
-    for (const [key, value] of this.metrics.entries()) {
+    Array.from(this.metrics.entries()).forEach(([key, value]) => {
       result[key] = value;
-    }
+    });
     return result;
   }
 }
 
 // Predefined loggers for different modules
 export const authLogger = {
-  register: (userId?: string, ip?: string, userAgent?: string, details?: any) => 
+  register: (userId?: string, ip?: string, userAgent?: string, details?: any) =>
     Logger.getInstance().info('auth', 'register', details, userId, ip, userAgent),
-  
-  login: (userId?: string, ip?: string, userAgent?: string, details?: any) => 
+
+  login: (userId?: string, ip?: string, userAgent?: string, details?: any) =>
     Logger.getInstance().info('auth', 'login', details, userId, ip, userAgent),
-  
-  logout: (userId?: string, ip?: string, userAgent?: string, details?: any) => 
+
+  logout: (userId?: string, ip?: string, userAgent?: string, details?: any) =>
     Logger.getInstance().info('auth', 'logout', details, userId, ip, userAgent),
-  
-  profileAccess: (userId?: string, ip?: string, userAgent?: string, details?: any) => 
+
+  profileAccess: (userId?: string, ip?: string, userAgent?: string, details?: any) =>
     Logger.getInstance().info('auth', 'profile', details, userId, ip, userAgent),
-  
-  passwordResetRequest: (userId?: string, ip?: string, userAgent?: string, details?: any) => 
+
+  passwordResetRequest: (userId?: string, ip?: string, userAgent?: string, details?: any) =>
     Logger.getInstance().info('auth', 'password-reset-request', details, userId, ip, userAgent),
-  
-  passwordResetComplete: (userId?: string, ip?: string, userAgent?: string, details?: any) => 
+
+  passwordResetComplete: (userId?: string, ip?: string, userAgent?: string, details?: any) =>
     Logger.getInstance().info('auth', 'password-reset-complete', details, userId, ip, userAgent),
-  
-  accountDeletion: (userId?: string, ip?: string, userAgent?: string, details?: any) => 
+
+  accountDeletion: (userId?: string, ip?: string, userAgent?: string, details?: any) =>
     Logger.getInstance().info('auth', 'account-deletion', details, userId, ip, userAgent),
-  
-  error: (operation: string, userId?: string, ip?: string, userAgent?: string, details?: any) => 
+
+  error: (operation: string, userId?: string, ip?: string, userAgent?: string, details?: any) =>
     Logger.getInstance().error('auth', operation, details, userId, ip, userAgent),
 };
 
@@ -188,23 +188,23 @@ export const authMetrics = {
   registerAttempt: () => MetricsTracker.getInstance().increment('auth.register.attempts'),
   registerSuccess: () => MetricsTracker.getInstance().increment('auth.register.success'),
   registerFailure: () => MetricsTracker.getInstance().increment('auth.register.failure'),
-  
+
   loginAttempt: () => MetricsTracker.getInstance().increment('auth.login.attempts'),
   loginSuccess: () => MetricsTracker.getInstance().increment('auth.login.success'),
   loginFailure: () => MetricsTracker.getInstance().increment('auth.login.failure'),
-  
+
   logoutAttempt: () => MetricsTracker.getInstance().increment('auth.logout.attempts'),
-  
+
   profileAccess: () => MetricsTracker.getInstance().increment('auth.profile.access'),
-  
+
   passwordResetRequestAttempt: () => MetricsTracker.getInstance().increment('auth.password-reset.request.attempts'),
   passwordResetRequestSuccess: () => MetricsTracker.getInstance().increment('auth.password-reset.request.success'),
   passwordResetCompleteAttempt: () => MetricsTracker.getInstance().increment('auth.password-reset.complete.attempts'),
   passwordResetCompleteSuccess: () => MetricsTracker.getInstance().increment('auth.password-reset.complete.success'),
-  
+
   accountDeletionAttempt: () => MetricsTracker.getInstance().increment('auth.account-deletion.attempts'),
   accountDeletionSuccess: () => MetricsTracker.getInstance().increment('auth.account-deletion.success'),
-  
+
   rateLimitHit: (endpoint: string) => MetricsTracker.getInstance().increment(`auth.rate-limit.${endpoint}`),
 };
 

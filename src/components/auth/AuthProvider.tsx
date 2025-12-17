@@ -55,24 +55,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const checkLoginStatus = () => {
       const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
       const userData = localStorage.getItem('user');
-      
+
       if (isLoggedIn && userData) {
         try {
           const user = JSON.parse(userData);
-          dispatch({ 
-            type: 'LOGIN_SUCCESS', 
-            payload: user 
+          dispatch({
+            type: 'LOGIN_SUCCESS',
+            payload: user
           });
         } catch (e) {
           console.error('Failed to parse user data from localStorage:', e);
-          dispatch({ 
-            type: 'LOGOUT' 
+          dispatch({
+            type: 'LOGOUT'
           });
         }
       } else {
-        dispatch({ 
-          type: 'SET_LOADING', 
-          payload: false 
+        dispatch({
+          type: 'SET_LOADING',
+          payload: false
         });
       }
     };
@@ -83,7 +83,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = (userData: any) => {
     localStorage.setItem('isLoggedIn', 'true');
     localStorage.setItem('user', JSON.stringify(userData));
-    
+    if (userData.token) {
+      localStorage.setItem('authToken', userData.token);
+    }
+
     dispatch({
       type: 'LOGIN_SUCCESS',
       payload: userData
@@ -95,7 +98,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem('user');
     localStorage.removeItem('userId');
     localStorage.removeItem('email');
-    
+    localStorage.removeItem('authToken');
+
     dispatch({
       type: 'LOGOUT'
     });
@@ -103,7 +107,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const updateUser = (userData: any) => {
     localStorage.setItem('user', JSON.stringify(userData));
-    
+
     dispatch({
       type: 'UPDATE_USER',
       payload: userData

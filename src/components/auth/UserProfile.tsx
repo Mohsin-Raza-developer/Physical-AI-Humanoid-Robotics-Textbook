@@ -22,11 +22,12 @@ interface UserData {
   updated_at: string;
 }
 
-const NEXT_PUBLIC_API_BASE_URL = typeof window !== 'undefined'
-  ? (window as any).env?.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3002'
-  : process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3002';
+import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
 const UserProfile: React.FC<UserProfileProps> = ({ userId }) => {
+  const { siteConfig } = useDocusaurusContext();
+  const apiBaseUrl = (siteConfig.customFields?.apiBaseUrl as string) || 'http://localhost:3002';
+
   const { state, logout } = useAuth();
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -45,14 +46,39 @@ const UserProfile: React.FC<UserProfileProps> = ({ userId }) => {
           return;
         }
 
-        const response = await axios.get(`${NEXT_PUBLIC_API_BASE_URL}/api/users/profile?userId=${targetUserId}`);
+        const token = localStorage.getItem('authToken');
+
+        const response = await axios.get(`${apiBaseUrl}/api/users/profile?userId=${targetUserId}`, {
+          withCredentials: true,
+          headers: {
+            'Authorization': token ? `Bearer ${token}` : ''
+          }
+        });
 
         if (response.status === 200) {
           setUser(response.data.data);
         }
       } catch (err: any) {
         console.error('Error fetching user profile:', err);
-        setError(err.response?.data?.message || 'Error fetching user profile');
+
+        // Check if it's a 401 Unauthorized error (session expired or invalid)
+        if (err.response?.status === 401) {
+          // Session expired or invalid - logout user
+          console.log('Session expired - logging out user');
+          logout(); // Clear localStorage and auth state
+
+          // Show alert and redirect to login
+          alert('Your session has expired. Please login again.');
+
+          // Redirect to login page
+          if (typeof window !== 'undefined') {
+            window.location.href = window.location.origin + '/Physical-AI-Humanoid-Robotics-Textbook/auth/login';
+          }
+          return;
+        }
+
+        const detailedError = err.response?.data?.message || err.message || 'Error fetching user profile';
+        setError(detailedError);
       } finally {
         setLoading(false);
       }
@@ -70,8 +96,9 @@ const UserProfile: React.FC<UserProfileProps> = ({ userId }) => {
 
     setDeleteLoading(true);
     try {
-      const response = await axios.delete(`${NEXT_PUBLIC_API_BASE_URL}/api/auth/account?userId=${user.id}`, {
-        data: { userId: user.id }
+      const response = await axios.delete(`${apiBaseUrl}/api/auth/account`, {
+        data: { userId: user.id }, // Keeping data, but removing query param as new backend uses session
+        withCredentials: true
       });
 
       if (response.status === 200) {
@@ -100,10 +127,19 @@ const UserProfile: React.FC<UserProfileProps> = ({ userId }) => {
     return (
       <div className={styles.container}>
         <div className={styles.card}>
-          <div className={styles.content}>
-            <h3>Unable to load profile</h3>
-            <p>{error || 'User profile not available'}</p>
-            <Link to="/" className="button button--primary">Return Home</Link>
+          <div className={styles.content} style={{ textAlign: 'center', padding: '60px 20px' }}>
+            <div style={{ fontSize: '48px', marginBottom: '20px' }}>⚠️</div>
+            <h2 style={{ color: '#e74c3c', marginBottom: '10px' }}>Unable to Load Profile</h2>
+            <p className={styles.errorText} style={{ fontSize: '16px', color: '#666', marginBottom: '20px' }}>
+              We couldn't fetch your profile data from the server.
+            </p>
+            <div style={{ background: '#f8f9fa', padding: '15px', borderRadius: '8px', display: 'inline-block', marginBottom: '25px', textAlign: 'left', border: '1px solid #dee2e6' }}>
+              <p style={{ margin: 0, fontSize: '12px', color: '#666', fontFamily: 'monospace' }}>
+                <strong>Technical Error:</strong> {error || 'Unknown network error'}
+              </p>
+            </div>
+            <br />
+            <Link to="/" className="button button--primary button--lg">Return Home</Link>
           </div>
         </div>
       </div>

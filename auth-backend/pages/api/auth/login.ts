@@ -1,41 +1,19 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { validateLogin, sanitizeInput } from '../../../lib/validation';
 import { UserModel } from '../../../lib/user';
 import bcrypt from 'bcryptjs';
+import type { NextApiRequest, NextApiResponse } from 'next';
 import type { AuthResponse, LoginResponse, LoginRequest } from '../../../types/auth';
-import { validateEmail, sanitizeInput } from '../../../lib/validation';
 import { authRateLimit } from '../../../lib/rateLimit';
 import { applySecurityHeaders } from '../../../lib/security';
 import { authLogger, authMetrics } from '../../../lib/logger';
+import { withCors } from '../../../middleware/cors';
+import crypto from 'crypto';
+import db from '../../../lib/database';
 
-export default async function handler(
+async function handler(
   req: NextApiRequest,
   res: NextApiResponse<AuthResponse>
 ) {
-  // Handle CORS preflight requests first
-  if (req.method === 'OPTIONS') {
-    const origin = req.headers.origin;
-    const allowedOrigins = [
-      process.env.CORS_ORIGIN || 'http://localhost:3000',
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://localhost:3002',
-      'https://physical-ai-humanoid-robotics-textbook.github.io'
-    ];
-
-    if (origin && allowedOrigins.includes(origin)) {
-      res.setHeader('Access-Control-Allow-Origin', origin);
-    } else {
-      res.setHeader('Access-Control-Allow-Origin', allowedOrigins[0]);
-    }
-
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Content-Length, Cache-Control');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-
-    res.status(200).end();
-    return;
-  }
-
   // Apply security headers
   applySecurityHeaders(req, res);
 
@@ -53,9 +31,6 @@ export default async function handler(
   }
 
   try {
-    // Track login attempt
-    authMetrics.loginAttempt();
-
     // Parse and sanitize request body
     const { email, password }: LoginRequest = sanitizeInput(req.body);
 
@@ -63,32 +38,33 @@ export default async function handler(
     const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     const userAgent = req.headers['user-agent'];
 
-    // Log login attempt
-    authLogger.login(undefined, ip?.toString(), userAgent, { email });
+    // Track login attempt
+    authMetrics.loginAttempt();
 
-    // Validate email format
-    const emailValidation = validateEmail(email);
-    if (!emailValidation.isValid) {
+    // Validate the input data
+    const validation = validateLogin({ email, password });
+
+    if (!validation.isValid) {
       authMetrics.loginFailure();
-      authLogger.error('login-validation', undefined, ip?.toString(), userAgent, { email, error: emailValidation.errors[0] || 'Invalid email format' });
+      authLogger.error('login-validation', undefined, ip?.toString(), userAgent, { email, errors: validation.errors });
 
       return res.status(400).json({
         success: false,
         message: 'Validation failed',
-        errors: [
-          {
-            field: 'email',
-            message: emailValidation.errors[0] || 'Invalid email format'
-          }
-        ]
+        errors: validation.errors.map(error => ({
+          field: 'validation',
+          message: error
+        }))
       });
     }
 
-    // Check if user exists
+    // Find the user by email
     const user = await UserModel.findByEmail(email);
+
     if (!user) {
       authMetrics.loginFailure();
-      authLogger.error('login-credentials', undefined, ip?.toString(), userAgent, { email, error: 'Invalid email or password' });
+      // Don't reveal that the user doesn't exist for security reasons, but log it internally
+      authLogger.error('login-user-not-found', undefined, ip?.toString(), userAgent, { email });
 
       return res.status(401).json({
         success: false,
@@ -96,15 +72,27 @@ export default async function handler(
       });
     }
 
-    // Check if password is correct
+    // Check if password matches
     const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+
     if (!isPasswordValid) {
       authMetrics.loginFailure();
-      authLogger.error('login-credentials', user.id, ip?.toString(), userAgent, { email, error: 'Invalid email or password' });
+      authLogger.error('login-failed', user.id, ip?.toString(), userAgent, { email });
 
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password',
+      });
+    }
+
+    // Check if account is active
+    if (!user.is_active) {
+      authMetrics.loginFailure();
+      authLogger.error('login-inactive', user.id, ip?.toString(), userAgent, { email });
+
+      return res.status(403).json({
+        success: false,
+        message: 'Account is deactivated. Please contact support.',
       });
     }
 
@@ -120,8 +108,40 @@ export default async function handler(
       userId: user.id
     });
 
-    // In a real implementation with Better Auth, we would create a session here
-    // For now, we'll return a response indicating successful login
+    // --- MANUAL SESSION CREATION ---
+    // Generate a secure token
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+
+    // Insert session into database (using our 'session' table)
+    console.log('[Login] Inserting Session:', token);
+    const insertResult = await db.query(
+      `INSERT INTO "session" ("id", "userId", "expiresAt", "ipAddress", "userAgent")
+       VALUES ($1, $2, $3, $4, $5)`,
+      [token, user.id, expiresAt, ip?.toString() || null, userAgent || null]
+    );
+    console.log('[Login] Session Inserted via db.query. RowCount:', insertResult.rowCount);
+
+    // Set the session cookie
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieName = 'better-auth.session_token';
+    const maxAge = 30 * 24 * 60 * 60; // 30 days
+
+    // Clear old cookie AND Set new cookie (Force refresh)
+    const clearCookie = `${cookieName}=; Path=/; HttpOnly; Max-Age=0`;
+
+    // Cookie Header Construction
+    // IMPORTANT: On localhost (http), Secure MUST be omitted.
+    let cookieValue = `${cookieName}=${token}; Path=/; HttpOnly; Max-Age=${maxAge}`;
+
+    if (isProduction) {
+      cookieValue += '; Secure';
+    }
+
+    // Send array of cookies
+    res.setHeader('Set-Cookie', [clearCookie, cookieValue]);
+    // --------------------------------
+
     const response: LoginResponse = {
       success: true,
       message: 'Login successful',
@@ -130,15 +150,16 @@ export default async function handler(
         email: user.email,
         firstName: user.first_name,
         lastName: user.last_name,
-        // 30 days in milliseconds (30 * 24 * 60 * 60 * 1000 = 2,592,000,000 ms)
         sessionTimeout: 2592000000,
+        token: token // Sending token in body as well just in case
       }
     };
 
     return res.status(200).json(response);
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     authMetrics.loginFailure();
-    authLogger.error('login', undefined, undefined, undefined, { error: error.message });
+    authLogger.error('login', undefined, undefined, undefined, { error: errorMessage });
 
     console.error('Login error:', error);
 
@@ -148,3 +169,5 @@ export default async function handler(
     });
   }
 }
+
+export default withCors(handler);

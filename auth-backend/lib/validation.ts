@@ -106,6 +106,29 @@ export function validateOnboardingQuestions(
 }
 
 /**
+ * Validates login input
+ */
+export function validateLogin(data: { email?: string; password?: string }): ValidationResult {
+  const errors: string[] = [];
+
+  if (!data.email) {
+    errors.push('Email is required');
+  } else {
+    const emailResult = validateEmail(data.email);
+    errors.push(...emailResult.errors);
+  }
+
+  if (!data.password) {
+    errors.push('Password is required');
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
+/**
  * Generic validation function that combines multiple validators
  */
 export function validateRegistration(

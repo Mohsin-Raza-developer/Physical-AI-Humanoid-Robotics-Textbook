@@ -1,5 +1,5 @@
 import { NextApiHandler, NextApiRequest, NextApiResponse } from 'next';
-import { User } from '../lib/user';
+import { User, UserModel } from '../lib/user';
 
 export interface AuthenticatedRequest extends NextApiRequest {
   user?: any; // User object attached by the middleware
@@ -9,58 +9,91 @@ export interface AuthenticatedRequest extends NextApiRequest {
  * Middleware to verify authentication for API endpoints
  * This middleware checks if the user is authenticated and attaches user info to the request
  */
+import db from '../lib/database';
+
 export const authenticateUser = async (req: AuthenticatedRequest, res: NextApiResponse, next: () => void) => {
   try {
-    // Extract the authentication token from the request
-    // Usually this comes from the Authorization header or cookies
-    const authHeader = req.headers.authorization;
-    const cookieHeader = req.headers.cookie;
-    
-    // For Better Auth, we typically look for session cookies or authorization headers
-    let sessionToken = null;
-    
-    // Check for Authorization header
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      sessionToken = authHeader.substring(7, authHeader.length); // Remove 'Bearer ' prefix
-    } 
-    // Check for session cookie (common in Better Auth)
-    else if (cookieHeader) {
-      const cookies = cookieHeader.split(';');
-      const sessionCookie = cookies.find(c => c.trim().startsWith('better-auth.session-token='));
-      if (sessionCookie) {
-        sessionToken = sessionCookie.split('=')[1];
+    // 1. Extract Session Token from either Authorization Header or Cookie
+    let token: string | null = null;
+
+    // A. Priority: Check Authorization Header (Bearer Token) - This is more reliable for frontend requests
+    if (req.headers.authorization) {
+      const authHeader = req.headers.authorization;
+      if (authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+        console.log('[Auth] Token extracted from Authorization header'); // DEBUG LOG
       }
     }
 
-    // If no token provided
-    if (!sessionToken) {
-      res.status(401).json({ 
-        success: false, 
-        message: 'Access denied. No authentication token provided.' 
+    // B. Fallback: Check Cookie if Authorization header is missing
+    if (!token) {
+      const cookieHeader = req.headers.cookie;
+      console.log('[Auth] Cookie Header:', cookieHeader); // DEBUG LOG
+
+      if (cookieHeader && cookieHeader.includes('better-auth.session_token')) {
+        token = cookieHeader.split('better-auth.session_token=')[1].split(';')[0].trim();
+        console.log('[Auth] Token extracted from cookie'); // DEBUG LOG
+      }
+    }
+
+    // If no token found in either location, return 401
+    if (!token) {
+      console.log('[Auth] No token found in Authorization header or cookies');
+      res.status(401).json({
+        success: false,
+        message: 'No session token found. Please log in.'
       });
       return;
     }
 
-    // For now, we'll implement a simplified version. 
-    // In a real implementation with Better Auth, we'd call the session validation
-    // Since we don't have Better Auth fully configured yet, we'll skip actual validation
-    // and just check that a token exists (in real implementation, we'd validate the token)
-    
-    // For demonstration, we'll just attach a placeholder user
-    // In reality, we would validate the session token with Better Auth
-    // const session = await validateSession(sessionToken);
-    
-    // Placeholder - in real implementation, we would validate the token
-    // and extract the user information from the validated session
-    req.user = { id: 'demo-user-id', authenticated: true };
+    // 2. Check Database for this Session Token
+    console.log(`[Auth] Querying DB for token: '${token}' (Length: ${token.length})`);
+
+    // First check if it exists AT ALL (ignore expiry)
+    const result = await db.query(
+      `SELECT * FROM "session" WHERE "id" = $1`,
+      [token]
+    );
+
+    const session = result.rows[0];
+    console.log('[Auth] DB Raw Result:', session ? 'Found' : 'Not Found');
+
+    if (session) {
+      console.log('[Auth] Validating Expiry:', session.expiresAt, 'vs Now:', new Date());
+      if (new Date(session.expiresAt) < new Date()) {
+        console.log('[Auth] Session Expired!');
+        // Explicitly fail if expired
+        res.status(401).json({ success: false, message: 'Session expired' });
+        return;
+      }
+    }
+
+    // If no valid session found
+    if (!session) {
+      res.status(401).json({
+        success: false,
+        message: 'Invalid or expired session.'
+      });
+      return;
+    }
+
+    // 3. Attach User Info (Standardize req.user)
+    // IMPORTANT: Spread session FIRST, then overwrite 'id' with userId.
+    // Otherwise session.id (which is the token) overwrites user.id.
+    req.user = {
+      ...session,
+      authenticated: true,
+      id: session.userId || session.user_id, // Ensure this is the User UUID
+      sessionId: session.id // Keep token as sessionId if needed
+    };
 
     // Proceed to the next middleware or route handler
     next();
   } catch (error) {
     console.error('Authentication middleware error:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Internal server error during authentication.' 
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error during authentication.'
     });
   }
 };
@@ -95,7 +128,7 @@ export const requireAuth = (handler: NextApiHandler): NextApiHandler => {
       // The authenticateUser middleware should have already sent the error response
       // But if for some reason we get here without a user and response not sent
       if (res.writableEnded) return; // Response already sent
-      
+
       res.status(401).json({
         success: false,
         message: 'Authentication required to access this resource'
@@ -118,7 +151,7 @@ export const requireRole = (roles: string[]) => {
       // First ensure user is authenticated
       if (!req.user || !req.user.authenticated) {
         if (res.writableEnded) return; // Response already sent
-        
+
         res.status(401).json({
           success: false,
           message: 'Authentication required to access this resource'
@@ -130,7 +163,7 @@ export const requireRole = (roles: string[]) => {
       // For now, we'll assume all authenticated users have the 'user' role
       // This would need to be extended based on the actual user role system
       const userHasRequiredRole = roles.includes('user') || roles.includes('admin');
-      
+
       if (!userHasRequiredRole) {
         res.status(403).json({
           success: false,
@@ -157,8 +190,8 @@ export const attachUserProfile = async (req: AuthenticatedRequest, res: NextApiR
 
   try {
     // Fetch user profile from database
-    const userProfile = await User.findById(req.user.id);
-    
+    const userProfile = await UserModel.findById(req.user.id);
+
     if (!userProfile) {
       res.status(401).json({
         success: false,
@@ -166,10 +199,10 @@ export const attachUserProfile = async (req: AuthenticatedRequest, res: NextApiR
       });
       return;
     }
-    
+
     // Attach the user profile to the request for subsequent handlers
     req.user.profile = userProfile;
-    
+
     next();
   } catch (error) {
     console.error('Error attaching user profile:', error);
