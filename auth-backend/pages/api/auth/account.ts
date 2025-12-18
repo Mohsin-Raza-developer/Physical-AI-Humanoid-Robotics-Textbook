@@ -14,11 +14,7 @@ async function handler(
   // Apply security headers
   applySecurityHeaders(req, res);
 
-  // Apply rate limiting for account deletion endpoint
-  if (!(await authRateLimit(req, res))) {
-    authMetrics.rateLimitHit('account-deletion');
-    return; // Rate limit response already sent
-  }
+  // Note: Rate limiting not needed here as route is already protected by withAuth middleware
 
   if (req.method !== 'DELETE') {
     return res.status(405).json({

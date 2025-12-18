@@ -1,31 +1,35 @@
 import { RateLimiterMemory } from 'rate-limiter-flexible';
 import type { NextApiRequest, NextApiResponse } from 'next';
 
-// Create rate limiter configuration
-const authLimiter = new RateLimiterMemory({
-  // Limit to 7 requests per 1 hour per IP
-  points: 7, // Number of points (requests)
+// Email-based rate limiter - tracks attempts per email address
+const emailAuthLimiter = new RateLimiterMemory({
+  points: 7, // Maximum 7 attempts per email
   duration: 60 * 60, // Per 1 hour (in seconds)
 });
 
-// Specific rate limiter for auth endpoints
-export const authRateLimit = async (req: NextApiRequest, res: NextApiResponse): Promise<boolean> => {
-  // Get IP address from request
-  const ip = req.headers['x-forwarded-for']?.toString().split(',')[0].trim() ||
-    req.connection.remoteAddress ||
-    req.socket.remoteAddress ||
-    (req as any).ip ||
-    '127.0.0.1';
+// Rate limiting for auth endpoints (email-based)
+export const authRateLimit = async (
+  req: NextApiRequest,
+  res: NextApiResponse,
+  email?: string
+): Promise<boolean> => {
+  // If email is not provided, allow the request (no rate limiting)
+  if (!email) {
+    return true;
+  }
+
+  // Normalize email to lowercase for consistent tracking
+  const normalizedEmail = email.toLowerCase().trim();
 
   try {
-    // Consume a point for this IP
-    await authLimiter.consume(ip);
+    // Consume a point for this email address
+    await emailAuthLimiter.consume(normalizedEmail);
     return true; // Rate limit not exceeded
   } catch (rejRes) {
-    // If rate limit is exceeded
+    // If rate limit is exceeded for this email
     res.status(429).json({
       success: false,
-      message: 'Too many authentication attempts, please try again later.',
+      message: 'Too many authentication attempts with this email, please try again later.',
     });
     return false;
   }
