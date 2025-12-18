@@ -15,12 +15,6 @@ async function handler(
   // Apply security headers
   applySecurityHeaders(req, res);
 
-  // Apply rate limiting for authentication endpoints
-  if (!(await authRateLimit(req, res))) {
-    authMetrics.rateLimitHit('register');
-    return; // Rate limit response already sent
-  }
-
   if (req.method !== 'POST') {
     return res.status(405).json({
       success: false,
@@ -29,11 +23,17 @@ async function handler(
   }
 
   try {
+    // Parse and sanitize request body first to get email
+    const { email, password, firstName, lastName, softwareLevel, hardwareAccess }: RegistrationRequest = sanitizeInput(req.body);
+
+    // Apply email-based rate limiting for registration attempts
+    if (!(await authRateLimit(req, res, email))) {
+      authMetrics.rateLimitHit('register');
+      return; // Rate limit response already sent
+    }
+
     // Track registration attempt
     authMetrics.registerAttempt();
-
-    // Parse and sanitize request body
-    const { email, password, firstName, lastName, softwareLevel, hardwareAccess }: RegistrationRequest = sanitizeInput(req.body);
 
     // Get IP and user agent for logging
     const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;

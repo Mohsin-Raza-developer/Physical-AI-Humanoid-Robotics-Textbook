@@ -17,12 +17,6 @@ async function handler(
   // Apply security headers
   applySecurityHeaders(req, res);
 
-  // Apply rate limiting for authentication endpoints
-  if (!(await authRateLimit(req, res))) {
-    authMetrics.rateLimitHit('reset-password-request');
-    return; // Rate limit response already sent
-  }
-
   if (req.method !== 'POST') {
     return res.status(405).json({
       success: false,
@@ -31,8 +25,14 @@ async function handler(
   }
 
   try {
-    // Parse and sanitize request body
+    // Parse and sanitize request body first to get email
     const { email }: PasswordResetRequest = sanitizeInput(req.body);
+
+    // Apply email-based rate limiting for password reset requests
+    if (!(await authRateLimit(req, res, email))) {
+      authMetrics.rateLimitHit('reset-password-request');
+      return; // Rate limit response already sent
+    }
 
     // Validate email format
     const emailValidation = validateEmail(email);
