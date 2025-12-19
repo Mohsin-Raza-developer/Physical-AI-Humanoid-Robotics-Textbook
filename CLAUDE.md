@@ -210,4 +210,5 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
 
 ## Recent Changes
+- 006-embeddings-qdrant: Added Python script for embeddings generation (Cohere embed-v4.0, Qdrant Cloud, LangChain chunking)
 - 003-book-content-structure: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]

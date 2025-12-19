@@ -50,3 +50,11 @@ dist/
 # Temporary Log Files
 logs_result*.json
 
+# Python Scripts (Embeddings Generation)
+scripts/__pycache__/
+scripts/*.pyc
+scripts/.env
+scripts/venv-embeddings/
+scripts/.checkpoint.json
+scripts/.processed_files.json
+scripts/embeddings_generation.log
