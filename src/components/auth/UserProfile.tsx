@@ -96,9 +96,14 @@ const UserProfile: React.FC<UserProfileProps> = ({ userId }) => {
 
     setDeleteLoading(true);
     try {
+      const token = localStorage.getItem('authToken');
+
       const response = await axios.delete(`${apiBaseUrl}/api/auth/account`, {
-        data: { userId: user.id }, // Keeping data, but removing query param as new backend uses session
-        withCredentials: true
+        data: { userId: user.id },
+        withCredentials: true,
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : ''
+        }
       });
 
       if (response.status === 200) {

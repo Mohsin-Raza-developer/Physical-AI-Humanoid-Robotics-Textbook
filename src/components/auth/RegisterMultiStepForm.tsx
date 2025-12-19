@@ -311,6 +311,8 @@ const RegisterMultiStepForm: React.FC<RegisterMultiStepFormProps> = ({ onSuccess
       newErrors.password = 'Password must contain at least one uppercase letter';
     } else if (!/\d/.test(formData.step1.password)) {
       newErrors.password = 'Password must contain at least one number';
+    } else if (!/[!@#$%^&*(),.?":{}|<>[\]\\;'`~\-=_+]/.test(formData.step1.password)) {
+      newErrors.password = 'Password must contain at least one special character';
     }
 
     if (!formData.step1.confirmPassword) {

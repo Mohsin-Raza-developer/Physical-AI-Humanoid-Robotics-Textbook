@@ -52,12 +52,11 @@ async function handler(
     // Find the user by email
     const user = await UserModel.findByEmail(email);
 
-    // Don't reveal if the email exists or not for security reasons
+    // Return honest message if email is not registered
     if (!user) {
-      // Still return success to prevent user enumeration
-      return res.status(200).json({
-        success: true,
-        message: 'Password reset email sent if email exists'
+      return res.status(404).json({
+        success: false,
+        message: 'This email is not registered. Please sign up first or check your email address.'
       });
     }
 
@@ -84,10 +83,10 @@ async function handler(
     // Send password reset email
     await sendPasswordResetEmail({ email: user.email, resetToken: token, userName: user.email.split('@')[0] });
 
-    // Return success response (don't reveal if user exists)
+    // Return success response with honest message
     return res.status(200).json({
       success: true,
-      message: 'Password reset email sent if email exists'
+      message: 'Password reset email sent successfully. Please check your inbox.'
     });
   } catch (error: any) {
     console.error('Password reset request error:', error);
