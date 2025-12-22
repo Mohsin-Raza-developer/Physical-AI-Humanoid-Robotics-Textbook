@@ -58,3 +58,30 @@ scripts/venv-embeddings/
 scripts/.checkpoint.json
 scripts/.processed_files.json
 scripts/embeddings_generation.log
+
+# Python Backend
+backend/__pycache__/
+backend/*.pyc
+backend/.env
+backend/venv/
+backend/.venv/
+backend/*.egg-info/
+backend/dist/
+backend/build/
+backend/.pytest_cache/
+backend/.coverage
+backend/htmlcov/
+backend/.mypy_cache/
+
+# Backend Test & Debug Files
+backend/test_*.py
+backend/debug_*.py
+backend/dum.py
+backend/error.md
+backend/tests/
+
+# Backend Documentation (personal notes)
+backend/MAIN_PY_WORKFLOW.md
+
+# Backend Alternative Implementations (not in use)
+backend/chatbot_agents_openai.py
