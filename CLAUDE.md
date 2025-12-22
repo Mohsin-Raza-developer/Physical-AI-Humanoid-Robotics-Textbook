@@ -210,5 +210,10 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
 
 ## Recent Changes
+- 007-chatbot-backend: Added Python 3.12+ + FastAPI 0.115+, OpenAI Agents SDK, Cohere SDK, Qdrant Client, psycopg2
 - 006-embeddings-qdrant: Added Python script for embeddings generation (Cohere embed-v4.0, Qdrant Cloud, LangChain chunking)
 - 003-book-content-structure: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
+
+## Active Technologies
+- Python 3.12+ + FastAPI 0.115+, OpenAI Agents SDK, Cohere SDK, Qdrant Client, psycopg2 (007-chatbot-backend)
+- Qdrant Cloud (vector DB), Neon Serverless Postgres (user profiles) (007-chatbot-backend)

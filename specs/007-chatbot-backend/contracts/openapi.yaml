@@ -1,0 +1,419 @@
+openapi: 3.1.0
+info:
+  title: RAG Chatbot Backend API
+  description: |
+    Backend API for the Physical AI & Humanoid Robotics Interactive Textbook chatbot.
+    Provides intelligent Q&A functionality using Retrieval-Augmented Generation (RAG)
+    with Gemini 2.0 Flash, Cohere embeddings, and Qdrant vector database.
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: https://api.example.com/v1
+    description: Production server
+  - url: https://staging-api.example.com/v1
+    description: Staging server
+  - url: http://localhost:8000/v1
+    description: Local development server
+
+tags:
+  - name: chat
+    description: Chat conversation endpoints
+  - name: sessions
+    description: Session management endpoints
+  - name: health
+    description: Health check endpoints
+
+paths:
+  /chat:
+    post:
+      tags:
+        - chat
+      summary: Send chat message
+      description: |
+        Send a user question to the chatbot and receive an AI-generated response
+        based on textbook content. The system uses RAG to retrieve relevant
+        knowledge and generate accurate, cited answers.
+      operationId: sendChatMessage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+            examples:
+              new_conversation:
+                summary: New conversation
+                value:
+                  message: "What is ROS 2 architecture?"
+                  user_id: "user_12345"
+              continuing_conversation:
+                summary: Continuing conversation
+                value:
+                  message: "How do I install it?"
+                  user_id: "user_12345"
+                  session_id: "sess_abc123"
+      responses:
+        '200':
+          description: Successful response with chatbot answer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+              examples:
+                successful_response:
+                  summary: Answer with citations
+                  value:
+                    response: "ROS 2 (Robot Operating System 2) is a middleware framework for robotic applications that provides abstraction layers for hardware, device drivers, libraries, visualizers, and message-passing between processes. [ROS 2 Architecture](/docs/module-1/week-3/ros2-architecture)"
+                    session_id: "sess_abc123"
+                    citations:
+                      - chapter_title: "ROS 2 Architecture Overview"
+                        doc_url: "/docs/module-1/week-3/ros2-architecture"
+                        relevance_score: 0.92
+                    confidence_score: 0.88
+                    processing_time_ms: 1245
+                    token_count: 523
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - BearerAuth: []
+
+  /sessions/{session_id}:
+    get:
+      tags:
+        - sessions
+      summary: Get session details
+      description: Retrieve conversation history and metadata for a specific session
+      operationId: getSession
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^sess_[a-zA-Z0-9]+$'
+          description: Unique session identifier
+      responses:
+        '200':
+          description: Session details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionDetails'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - BearerAuth: []
+
+    delete:
+      tags:
+        - sessions
+      summary: End session
+      description: End an active conversation session
+      operationId: endSession
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^sess_[a-zA-Z0-9]+$'
+          description: Unique session identifier
+      responses:
+        '204':
+          description: Session ended successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - BearerAuth: []
+
+  /health:
+    get:
+      tags:
+        - health
+      summary: Health check
+      description: Check if the API is running and all dependencies are accessible
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheck'
+        '503':
+          description: Service is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheck'
+
+components:
+  schemas:
+    ChatRequest:
+      type: object
+      required:
+        - message
+        - user_id
+      properties:
+        message:
+          type: string
+          minLength: 1
+          maxLength: 2000
+          description: User's question or message
+          example: "What is ROS 2 architecture?"
+        user_id:
+          type: string
+          pattern: '^[a-zA-Z0-9_-]+$'
+          description: Authenticated user identifier
+          example: "user_12345"
+        session_id:
+          type: string
+          pattern: '^sess_[a-zA-Z0-9]+$'
+          nullable: true
+          description: Optional session ID for continuing conversation
+          example: "sess_abc123"
+
+    ChatResponse:
+      type: object
+      required:
+        - response
+        - session_id
+        - processing_time_ms
+        - token_count
+      properties:
+        response:
+          type: string
+          description: Agent's answer with inline markdown citations
+          example: "ROS 2 is a middleware framework... [ROS 2 Architecture](/docs/module-1/ros2)"
+        session_id:
+          type: string
+          description: Session ID for conversation continuity
+          example: "sess_abc123"
+        citations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Citation'
+          description: Source references for the answer
+          default: []
+        confidence_score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          nullable: true
+          description: Response confidence score (0-1)
+          example: 0.88
+        processing_time_ms:
+          type: integer
+          description: Total processing time in milliseconds
+          example: 1245
+        token_count:
+          type: integer
+          description: Total tokens in conversation context
+          example: 523
+
+    Citation:
+      type: object
+      required:
+        - chapter_title
+        - doc_url
+        - relevance_score
+      properties:
+        chapter_title:
+          type: string
+          description: Display name of source chapter
+          example: "ROS 2 Architecture Overview"
+        doc_url:
+          type: string
+          format: uri-reference
+          description: Docusaurus URL path
+          example: "/docs/module-1/week-3/ros2-architecture"
+        relevance_score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Search relevance score (0-1)
+          example: 0.92
+
+    SessionDetails:
+      type: object
+      required:
+        - session_id
+        - user_id
+        - created_at
+        - last_activity
+        - message_count
+        - is_active
+      properties:
+        session_id:
+          type: string
+          description: Unique session identifier
+          example: "sess_abc123"
+        user_id:
+          type: string
+          description: User who owns this session
+          example: "user_12345"
+        created_at:
+          type: string
+          format: date-time
+          description: Session start time (ISO 8601)
+          example: "2025-12-20T14:30:00Z"
+        last_activity:
+          type: string
+          format: date-time
+          description: Last message timestamp (ISO 8601)
+          example: "2025-12-20T14:35:42Z"
+        message_count:
+          type: integer
+          description: Number of messages in conversation
+          example: 8
+        token_count:
+          type: integer
+          description: Total tokens in context window
+          example: 523
+        is_active:
+          type: boolean
+          description: Session active status
+          example: true
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - code
+      properties:
+        error:
+          type: string
+          description: User-friendly error message
+          example: "We're having trouble connecting to our knowledge base. Please try again."
+        code:
+          type: string
+          description: Error code for support/debugging
+          example: "ERR_DB_001"
+        details:
+          type: object
+          nullable: true
+          description: Optional additional context
+          additionalProperties: true
+          example:
+            retry_after_seconds: 30
+
+    HealthCheck:
+      type: object
+      required:
+        - status
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy]
+          description: Overall service health status
+          example: "healthy"
+        timestamp:
+          type: string
+          format: date-time
+          description: Check timestamp (ISO 8601)
+          example: "2025-12-20T14:30:00Z"
+        dependencies:
+          type: object
+          description: Health status of external dependencies
+          properties:
+            neon_db:
+              $ref: '#/components/schemas/DependencyHealth'
+            qdrant:
+              $ref: '#/components/schemas/DependencyHealth'
+            cohere:
+              $ref: '#/components/schemas/DependencyHealth'
+            gemini:
+              $ref: '#/components/schemas/DependencyHealth'
+
+    DependencyHealth:
+      type: object
+      required:
+        - status
+        - latency_ms
+      properties:
+        status:
+          type: string
+          enum: [up, down]
+          description: Dependency availability status
+          example: "up"
+        latency_ms:
+          type: integer
+          description: Response time in milliseconds
+          example: 45
+        error:
+          type: string
+          nullable: true
+          description: Error message if dependency is down
+          example: null
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Message cannot be empty or whitespace only"
+            code: "ERR_VAL_001"
+
+    Unauthorized:
+      description: Authentication required or failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Authentication required. Please provide a valid access token."
+            code: "ERR_AUTH_001"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Session not found or has expired"
+            code: "ERR_NOT_FOUND"
+
+    RateLimited:
+      description: Too many requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Rate limit exceeded. Please try again in 60 seconds."
+            code: "ERR_RATE_LIMIT"
+            details:
+              retry_after_seconds: 60
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "An unexpected error occurred. Our team has been notified."
+            code: "ERR_INTERNAL"
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token from authentication system
