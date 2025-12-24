@@ -6,6 +6,7 @@ Initializes the ChatKit Gemini backend with CORS, routers, and middleware.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
+from app.routers import threads, messages
 import sentry_sdk
 
 # Initialize Sentry (optional)
@@ -30,6 +31,10 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type"],
     expose_headers=["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"]
 )
+
+# Include routers
+app.include_router(threads.router)
+app.include_router(messages.router)
 
 
 # Health check endpoint

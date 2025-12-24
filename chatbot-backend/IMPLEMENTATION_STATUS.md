@@ -2,7 +2,7 @@
 
 **Last Updated**: 2025-12-24
 **Branch**: `008-chatkit-gemini-backend`
-**Session**: Phase 1-2 Complete (Foundation)
+**Session**: Phase 1-3 Complete (MVP - User Story 1)
 
 ---
 
@@ -32,38 +32,48 @@
 - ✅ T019: Message schemas (schemas/message.py)
 - ✅ T020: Health check endpoint (GET /health)
 
-**Total Completed**: 20/100 tasks (20%)
+### Phase 3: MVP - User Story 1 (T021-T039) ✅ COMPLETE
+- ✅ T021: Gemini AsyncOpenAI client configured (services/agent_service.py)
+- ✅ T022: Cohere + Qdrant clients initialized (services/search_tool.py)
+- ✅ T023: Knowledge base search tool implemented with @function_tool
+- ✅ T024: Chat agent created with Gemini model and search tool
+- ✅ T025: generate_response and generate_response_stream functions
+- ✅ T026: ThreadService class (CRUD operations)
+- ✅ T027: MessageService class (message handling)
+- ✅ T028: POST /api/threads endpoint
+- ✅ T029: GET /api/threads endpoint (pagination)
+- ✅ T030: GET /api/threads/{thread_id} endpoint
+- ✅ T031: DELETE /api/threads/{thread_id} endpoint
+- ✅ T032: POST /api/threads/{thread_id}/messages streaming endpoint (SSE)
+- ✅ T033: SSE event formatters (message_start, content_delta, message_end)
+- ✅ T034: Message persistence in streaming endpoint
+- ✅ T035: GET /api/threads/{thread_id}/messages endpoint (pagination)
+- ✅ T036: Routers registered in main.py
+- ✅ T037: Rate limiting middleware (SlowAPI)
+- ✅ T038: Error handling with retry logic for Gemini API (tenacity)
+- ✅ T039: Input validation in MessageCreate schema
+
+**Total Completed**: 39/100 tasks (39%)
 
 ---
 
-## 🔄 Next Phase: Phase 3 (MVP - User Story 1)
+## 🔄 Next Phase: Phase 4 (User Story 2 - Agentic Actions)
 
-**Goal**: Complete working chatbot with streaming responses
+**Goal**: Expose agent tool invocations and reasoning steps as structured events
 
-**Remaining Tasks**: T021-T039 (19 tasks)
+**Remaining Tasks**: T040-T045 (6 tasks)
 
 ### What Needs to Be Built:
 
-1. **AI Integration** (T021-T025):
-   - Gemini client configuration
-   - Cohere + Qdrant clients
-   - Knowledge base search tool
-   - Chat agent setup
-   - Response generation with streaming
+1. **Action Events** (T040-T043):
+   - Modify agent_service.py to emit action events
+   - Add action_event SSE formatter
+   - Stream tool invocations (search_knowledge_base)
+   - Include metadata (action_type, tool_name, status, timestamps)
 
-2. **Services** (T026-T027):
-   - ThreadService (CRUD operations)
-   - MessageService (message handling)
-
-3. **API Endpoints** (T028-T036):
-   - Thread CRUD endpoints
-   - Message streaming endpoint (SSE)
-   - Router registration in main.py
-
-4. **Polish** (T037-T039):
-   - Rate limiting (SlowAPI)
-   - Error handling for Gemini
-   - Input validation
+2. **Enhanced Response** (T044-T045):
+   - Update runner configuration for action streaming
+   - Test end-to-end action visibility
 
 ---
 
@@ -75,14 +85,14 @@
 # In Claude Code terminal:
 /sp.implement
 
-# This will automatically continue from T021
+# This will automatically continue from T040 (Phase 4)
 ```
 
 ### Option 2: Ask Claude to Resume
 
 Simply say:
 ```
-"Continue implementation from Phase 3 (T021-T039)"
+"Continue implementation from Phase 4 (T040-T045)"
 ```
 
 ### Option 3: Manual Implementation
@@ -90,9 +100,9 @@ Simply say:
 Refer to `specs/008-chatkit-gemini-backend/tasks.md` for task details.
 
 Implement tasks in order:
-1. T021: Configure Gemini client
-2. T022: Initialize Cohere + Qdrant
-3. T023: Implement search tool
+1. T040: Modify agent_service for action events
+2. T041: Add action_event SSE formatter
+3. T042: Stream tool invocations
 ...
 
 ---
@@ -102,25 +112,32 @@ Implement tasks in order:
 ```
 chatbot-backend/
 ├── app/
-│   ├── main.py              ✅ FastAPI app
+│   ├── main.py              ✅ FastAPI app with routers
 │   ├── config.py            ✅ Settings
 │   ├── database.py          ✅ DB connection
 │   ├── models/              ✅ SQLAlchemy models
 │   │   ├── thread.py
 │   │   └── message.py
-│   ├── schemas/             ✅ Pydantic schemas
+│   ├── schemas/             ✅ Pydantic schemas with validation
 │   │   ├── thread.py
 │   │   └── message.py
-│   ├── routers/             ⏳ Empty (needs T028-T036)
-│   ├── services/            ⏳ Empty (needs T021-T027)
-│   ├── middleware/          ✅ Auth ready
-│   │   └── auth.py
+│   ├── routers/             ✅ Complete (T028-T036)
+│   │   ├── threads.py       ✅ Thread CRUD endpoints
+│   │   └── messages.py      ✅ Message SSE streaming
+│   ├── services/            ✅ Complete (T021-T027)
+│   │   ├── agent_service.py ✅ Gemini + retry logic
+│   │   ├── search_tool.py   ✅ Qdrant + Cohere search
+│   │   ├── thread_service.py ✅ Thread business logic
+│   │   └── message_service.py ✅ Message business logic
+│   ├── middleware/          ✅ Auth + Rate limiting
+│   │   ├── auth.py
+│   │   └── rate_limit.py    ✅ SlowAPI (T037)
 │   └── utils/               ✅ Logger & errors
 │       ├── logger.py
 │       └── errors.py
 ├── alembic/                 ✅ Migrations ready
-├── tests/                   ⏳ Empty
-├── requirements.txt         ✅ Ready
+├── tests/                   ⏳ Empty (deferred)
+├── requirements.txt         ✅ Updated with tenacity
 └── README.md                ✅ Ready
 ```
 
@@ -159,10 +176,10 @@ alembic upgrade head
 
 ## 📊 Implementation Stats
 
-- **Files Created**: 28 files
-- **Lines of Code**: ~1,781 lines
-- **Time Invested**: ~15 minutes (Phase 1-2)
-- **Estimated Remaining**: 30-45 minutes (Phase 3 MVP)
+- **Files Created**: 35 files
+- **Lines of Code**: ~3,200+ lines
+- **Time Invested**: ~45 minutes (Phase 1-3)
+- **Estimated Remaining**: 20-30 minutes (Phase 4-5 optional features)
 
 ---
 
@@ -205,5 +222,5 @@ After Phase 3 completion, you should be able to:
 
 ---
 
-**Last Commit**: `9c8f8f8` - feat(chatbot): Phase 1-2 complete - Foundation ready
-**Next Action**: Continue with Phase 3 (T021-T039) to complete MVP
+**Last Commit**: Pending - feat(chatbot): Phase 3 complete - MVP User Story 1 ready
+**Next Action**: Test MVP endpoints, then optionally continue with Phase 4 (T040-T045) for agentic actions

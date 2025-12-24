@@ -65,25 +65,25 @@ Project uses: `chatbot-backend/` at repository root with `app/` subdirectory str
 
 ### Implementation for User Story 1
 
-- [ ] T021 [P] [US1] Configure Gemini AsyncOpenAI client in `chatbot-backend/app/services/agent_service.py` with base_url and API key
-- [ ] T022 [P] [US1] Initialize Cohere client and Qdrant client in `chatbot-backend/app/services/search_tool.py`
-- [ ] T023 [US1] Implement `search_knowledge_base` function tool in `chatbot-backend/app/services/search_tool.py` using @function_tool decorator with Cohere embedding and Qdrant search (collection: robotics_textbook_v1, limit=5, threshold=0.4)
-- [ ] T024 [US1] Create chat agent with Gemini model and search tool in `chatbot-backend/app/services/agent_service.py` (Agent name: "RoboticsAssistant", instructions per plan.md)
-- [ ] T025 [US1] Implement `generate_response` async function in `chatbot-backend/app/services/agent_service.py` using Runner.run with streaming support
-- [ ] T026 [US1] Create ThreadService class in `chatbot-backend/app/services/thread_service.py` with create_thread, get_threads, get_thread, delete_thread methods
-- [ ] T027 [US1] Create MessageService class in `chatbot-backend/app/services/message_service.py` with create_message, get_messages, get_next_sequence_number methods
-- [ ] T028 [US1] Implement POST `/api/threads` endpoint in `chatbot-backend/app/routers/threads.py` with JWT auth dependency
-- [ ] T029 [P] [US1] Implement GET `/api/threads` endpoint with pagination (limit, offset) in `chatbot-backend/app/routers/threads.py`
-- [ ] T030 [P] [US1] Implement GET `/api/threads/{thread_id}` endpoint with message history in `chatbot-backend/app/routers/threads.py`
-- [ ] T031 [P] [US1] Implement DELETE `/api/threads/{thread_id}` endpoint in `chatbot-backend/app/routers/threads.py`
-- [ ] T032 [US1] Implement POST `/api/threads/{thread_id}/messages` streaming endpoint in `chatbot-backend/app/routers/messages.py` using StreamingResponse with SSE format
-- [ ] T033 [US1] Add SSE event formatters in `chatbot-backend/app/routers/messages.py` for message_start, content_delta, message_end events
-- [ ] T034 [US1] Implement message persistence (save user message and assistant response) in POST messages endpoint
-- [ ] T035 [P] [US1] Implement GET `/api/threads/{thread_id}/messages` endpoint with pagination in `chatbot-backend/app/routers/messages.py`
-- [ ] T036 [US1] Add routers to FastAPI app in `chatbot-backend/app/main.py` (threads, messages)
-- [ ] T037 [US1] Add rate limiting middleware using SlowAPI in `chatbot-backend/app/middleware/rate_limit.py` (10 messages/min, 5 threads/min per user)
-- [ ] T038 [US1] Add error handling for Gemini API failures with retry logic in `chatbot-backend/app/services/agent_service.py`
-- [ ] T039 [US1] Add input validation (max content length 10,000 chars, no empty messages) in MessageCreate schema
+- [x] T021 [P] [US1] Configure Gemini AsyncOpenAI client in `chatbot-backend/app/services/agent_service.py` with base_url and API key
+- [x] T022 [P] [US1] Initialize Cohere client and Qdrant client in `chatbot-backend/app/services/search_tool.py`
+- [x] T023 [US1] Implement `search_knowledge_base` function tool in `chatbot-backend/app/services/search_tool.py` using @function_tool decorator with Cohere embedding and Qdrant search (collection: robotics_textbook_v1, limit=5, threshold=0.4)
+- [x] T024 [US1] Create chat agent with Gemini model and search tool in `chatbot-backend/app/services/agent_service.py` (Agent name: "RoboticsAssistant", instructions per plan.md)
+- [x] T025 [US1] Implement `generate_response` async function in `chatbot-backend/app/services/agent_service.py` using Runner.run with streaming support
+- [x] T026 [US1] Create ThreadService class in `chatbot-backend/app/services/thread_service.py` with create_thread, get_threads, get_thread, delete_thread methods
+- [x] T027 [US1] Create MessageService class in `chatbot-backend/app/services/message_service.py` with create_message, get_messages, get_next_sequence_number methods
+- [x] T028 [US1] Implement POST `/api/threads` endpoint in `chatbot-backend/app/routers/threads.py` with JWT auth dependency
+- [x] T029 [P] [US1] Implement GET `/api/threads` endpoint with pagination (limit, offset) in `chatbot-backend/app/routers/threads.py`
+- [x] T030 [P] [US1] Implement GET `/api/threads/{thread_id}` endpoint with message history in `chatbot-backend/app/routers/threads.py`
+- [x] T031 [P] [US1] Implement DELETE `/api/threads/{thread_id}` endpoint in `chatbot-backend/app/routers/threads.py`
+- [x] T032 [US1] Implement POST `/api/threads/{thread_id}/messages` streaming endpoint in `chatbot-backend/app/routers/messages.py` using StreamingResponse with SSE format
+- [x] T033 [US1] Add SSE event formatters in `chatbot-backend/app/routers/messages.py` for message_start, content_delta, message_end events
+- [x] T034 [US1] Implement message persistence (save user message and assistant response) in POST messages endpoint
+- [x] T035 [P] [US1] Implement GET `/api/threads/{thread_id}/messages` endpoint with pagination in `chatbot-backend/app/routers/messages.py`
+- [x] T036 [US1] Add routers to FastAPI app in `chatbot-backend/app/main.py` (threads, messages)
+- [x] T037 [US1] Add rate limiting middleware using SlowAPI in `chatbot-backend/app/middleware/rate_limit.py` (10 messages/min, 5 threads/min per user)
+- [x] T038 [US1] Add error handling for Gemini API failures with retry logic in `chatbot-backend/app/services/agent_service.py`
+- [x] T039 [US1] Add input validation (max content length 10,000 chars, no empty messages) in MessageCreate schema
 
 **Checkpoint**: At this point, User Story 1 should be fully functional - users can create threads, send messages, receive streaming AI responses with knowledge base search
 
