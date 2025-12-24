@@ -85,3 +85,21 @@ backend/MAIN_PY_WORKFLOW.md
 
 # Backend Alternative Implementations (not in use)
 backend/chatbot_agents_openai.py
+
+# ChatBot Backend (New FastAPI + Gemini Backend)
+chatbot-backend/__pycache__/
+chatbot-backend/**/__pycache__/
+chatbot-backend/*.pyc
+chatbot-backend/**/*.pyc
+chatbot-backend/.env
+chatbot-backend/venv/
+chatbot-backend/.venv/
+chatbot-backend/*.egg-info/
+chatbot-backend/dist/
+chatbot-backend/build/
+chatbot-backend/.pytest_cache/
+chatbot-backend/.coverage
+chatbot-backend/htmlcov/
+chatbot-backend/.mypy_cache/
+chatbot-backend/alembic/versions/*.py
+chatbot-backend/alembic/versions/__pycache__/
