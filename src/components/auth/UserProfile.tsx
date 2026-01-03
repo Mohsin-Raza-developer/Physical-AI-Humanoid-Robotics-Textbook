@@ -26,7 +26,7 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
 const UserProfile: React.FC<UserProfileProps> = ({ userId }) => {
   const { siteConfig } = useDocusaurusContext();
-  const apiBaseUrl = (siteConfig.customFields?.apiBaseUrl as string) || 'http://localhost:3002';
+  const authBaseUrl = (siteConfig.customFields?.authBaseUrl as string) || 'https://auth-backend-mohsin-raza-developers-projects.vercel.app';
 
   const { state, logout } = useAuth();
   const [user, setUser] = useState<UserData | null>(null);
@@ -48,7 +48,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ userId }) => {
 
         const token = localStorage.getItem('authToken');
 
-        const response = await axios.get(`${apiBaseUrl}/api/users/profile?userId=${targetUserId}`, {
+        const response = await axios.get(`${authBaseUrl}/api/users/profile?userId=${targetUserId}`, {
           withCredentials: true,
           headers: {
             'Authorization': token ? `Bearer ${token}` : ''
@@ -98,7 +98,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ userId }) => {
     try {
       const token = localStorage.getItem('authToken');
 
-      const response = await axios.delete(`${apiBaseUrl}/api/auth/account`, {
+      const response = await axios.delete(`${authBaseUrl}/api/auth/account`, {
         data: { userId: user.id },
         withCredentials: true,
         headers: {

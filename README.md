@@ -2,7 +2,9 @@
 
 📚 Interactive textbook for learning [**Physical AI and Humanoid Robotics development**](https://mohsin-raza-developer.github.io/Physical-AI-Humanoid-Robotics-Textbook/) with ROS 2, Gazebo, Isaac Sim, and Vision-Language-Action models.
 
-![Banner](banner.png)
+<p align="center">
+  <img src="banner.png" alt="Banner" width="600" />
+</p>
 
 [![Build Status](https://img.shields.io/github/actions/workflow/status/Mohsin-Raza-developer/Physical-AI-Humanoid-Robotics-Textbook/build.yml?style=for-the-badge)](https://github.com/Mohsin-Raza-developer/Physical-AI-Humanoid-Robotics-Textbook/actions)
 [![License](https://img.shields.io/github/license/Mohsin-Raza-developer/Physical-AI-Humanoid-Robotics-Textbook?style=for-the-badge)](LICENSE)

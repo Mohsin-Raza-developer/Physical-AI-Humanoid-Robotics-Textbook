@@ -1,0 +1,544 @@
+/**
+ * ChatKit Floating Widget Styles - Enhanced
+ */
+
+.chatButtonContainer {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  z-index: 1000;
+}
+
+/* Position variants */
+.bottomRight {
+  bottom: 24px;
+  right: 24px;
+}
+
+.bottomLeft {
+  bottom: 24px;
+  left: 24px;
+  align-items: flex-start;
+}
+
+.chatButton {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
+  border: none;
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.chatButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.chatButton:hover::before {
+  opacity: 1;
+}
+
+.chatButton:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 12px 32px rgba(99, 102, 241, 0.45);
+}
+
+.chatButton:active {
+  transform: translateY(-1px) scale(0.98);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+}
+
+.settingsButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(99, 102, 241, 0.1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(99, 102, 241, 0.9);
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+}
+
+.settingsButton:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.5);
+  transform: scale(1.1);
+  color: rgba(99, 102, 241, 1);
+}
+
+.settingsButton:active {
+  transform: scale(0.95);
+}
+
+/* ChatKit Container - Fixed position, bottom-right (like standard chat widgets) */
+.chatKitContainer {
+  position: fixed;
+  bottom: 90px;
+  right: 24px;
+  width: 420px;
+  height: 650px;
+  max-width: calc(100vw - 48px);
+  max-height: calc(100vh - 120px);
+  z-index: 2000;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  border-radius: 20px;
+  overflow: hidden;
+  background: var(--ifm-background-color);
+  border: 1px solid var(--ifm-color-emphasis-200);
+  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Robolearn-inspired: Hide scrollbars completely */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+/* Hide scrollbars in WebKit browsers (Chrome, Safari) */
+.chatKitContainer::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Apply scrollbar hiding to ChatKit web component and all children */
+.chatKitContainer :global(openai-chatkit),
+.chatKitContainer :global(*) {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.chatKitContainer :global(*::-webkit-scrollbar) {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Hide progress/scroll indicators aggressively */
+.chatKitContainer :global([class*='progress' i]),
+.chatKitContainer :global([class*='percentage' i]),
+.chatKitContainer :global([class*='indicator' i]),
+.chatKitContainer :global([id*='progress' i]),
+.chatKitContainer :global([aria-label*='scroll' i]),
+.chatKitContainer :global([aria-label*='progress' i]) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chatKit {
+  width: 100%;
+  height: 100%;
+  border-radius: 20px;
+}
+
+/* ChatKit message customization note:
+   ChatKit uses Shadow DOM and does NOT expose ::part() selectors for messages.
+   Message styling is controlled via theme configuration in useChatKit().
+   See ChatKitWidget.tsx for theme.typography, theme.color, and theme.radius options.
+*/
+
+/* "Ask" Button for Selected Text */
+.askButton {
+  position: fixed;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(99, 102, 241, 0.95);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(99, 102, 241, 0.1);
+  z-index: 1999;
+  transition: all 0.2s ease;
+  pointer-events: auto;
+  animation: slideDown 0.2s ease-out;
+  backdrop-filter: blur(8px);
+  white-space: nowrap;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.askButton:hover {
+  transform: translateX(-50%) translateY(-2px);
+  box-shadow:
+    0 4px 12px rgba(99, 102, 241, 0.3),
+    0 0 0 1px rgba(99, 102, 241, 0.2);
+  background: rgba(99, 102, 241, 1);
+}
+
+.askButton:active {
+  transform: translateX(-50%) translateY(0);
+}
+
+.askButton svg {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  opacity: 0.9;
+}
+
+/* Login Prompt Overlay */
+.loginPrompt {
+  position: fixed;
+  bottom: 90px;
+  right: 24px;
+  width: 400px;
+  max-width: calc(100vw - 48px);
+  z-index: 2000;
+  background: var(--ifm-background-color);
+  border: 2px solid rgba(99, 102, 241, 0.3);
+  border-radius: 16px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 0 20px rgba(99, 102, 241, 0.2);
+  animation: slideUp 0.3s ease-out;
+}
+
+.loginPromptContent {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  text-align: center;
+}
+
+.loginPromptContent h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--ifm-color-content);
+}
+
+.loginPromptContent p {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--ifm-color-content-secondary);
+  line-height: 1.6;
+}
+
+.loginButton {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.loginButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+}
+
+.loginButton:active {
+  transform: translateY(0);
+}
+
+.closeButton {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  color: var(--ifm-color-content-secondary);
+  border: 1px solid var(--ifm-color-content-secondary);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.closeButton:hover {
+  background: var(--ifm-color-content-secondary);
+  color: var(--ifm-background-color);
+}
+
+/* Personalize Menu */
+.personalizeMenu {
+  position: fixed;
+  bottom: 90px;
+  right: 24px;
+  width: 280px;
+  max-width: calc(100vw - 48px);
+  z-index: 2001;
+  background: var(--ifm-background-color);
+  border: 2px solid rgba(99, 102, 241, 0.3);
+  border-radius: 12px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 0 20px rgba(99, 102, 241, 0.2);
+  animation: slideUp 0.2s ease-out;
+  overflow: hidden;
+}
+
+.personalizeMenuHeader {
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.personalizeMenuHeader h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ifm-color-content);
+}
+
+.closeMenuButton {
+  background: transparent;
+  border: none;
+  color: var(--ifm-color-content-secondary);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.closeMenuButton:hover {
+  background: var(--ifm-color-emphasis-100);
+  color: var(--ifm-color-content);
+}
+
+.personalizeMenuContent {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.personalizeMenuContent p {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
+  color: var(--ifm-color-content-secondary);
+}
+
+.personalizeButton {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--ifm-color-emphasis-100);
+  color: var(--ifm-color-content);
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.personalizeButton:hover {
+  background: var(--ifm-color-emphasis-200);
+  border-color: rgba(99, 102, 241, 0.3);
+  transform: translateX(2px);
+}
+
+.personalizeButton svg {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+/* Dark mode support */
+[data-theme='dark'] .chatButton {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #c026d3 100%);
+  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.5);
+}
+
+[data-theme='dark'] .chatButton:hover {
+  box-shadow: 0 12px 32px rgba(79, 70, 229, 0.6);
+}
+
+[data-theme='dark'] .chatKitContainer {
+  background: var(--ifm-background-color);
+  border-color: var(--ifm-color-emphasis-200);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .chatButtonContainer {
+    bottom: 20px;
+    right: 20px;
+    gap: 10px;
+  }
+
+  .bottomRight {
+    bottom: 20px;
+    right: 20px;
+  }
+
+  .bottomLeft {
+    bottom: 20px;
+    left: 20px;
+  }
+
+  .chatButton {
+    width: 56px;
+    height: 56px;
+  }
+
+  .settingsButton {
+    width: 36px;
+    height: 36px;
+  }
+
+  .chatKitContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+    animation: slideInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @keyframes slideInUp {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .askButton {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+
+  .loginPrompt {
+    bottom: 80px;
+    right: 16px;
+    left: 16px;
+    width: auto;
+  }
+
+  .personalizeMenu {
+    bottom: 80px;
+    right: 16px;
+    left: 16px;
+    width: auto;
+  }
+}
+
+/* Small Screen Optimization (3-4 inch displays - 320-360px) */
+@media (max-width: 360px) {
+
+  .bottomRight,
+  .bottomLeft {
+    bottom: 16px;
+  }
+
+  .bottomRight {
+    right: 16px;
+  }
+
+  .bottomLeft {
+    left: 16px;
+  }
+
+  .chatButton {
+    width: 50px;
+    height: 50px;
+    min-width: 50px;
+    min-height: 50px;
+  }
+
+  .settingsButton {
+    min-width: 44px;
+    min-height: 44px;
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+
+  .chatButton,
+  .settingsButton,
+  .loginButton,
+  .closeButton,
+  .personalizeButton {
+    transition: none;
+  }
+
+  .chatKitContainer,
+  .askButton,
+  .loginPrompt,
+  .personalizeMenu {
+    animation: none;
+  }
+}

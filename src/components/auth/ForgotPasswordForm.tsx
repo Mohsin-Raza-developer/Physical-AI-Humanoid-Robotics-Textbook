@@ -11,7 +11,7 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
 const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSuccess }) => {
   const { siteConfig } = useDocusaurusContext();
-  const apiBaseUrl = (siteConfig.customFields?.apiBaseUrl as string) || 'http://localhost:3002';
+  const authBaseUrl = (siteConfig.customFields?.authBaseUrl as string) || 'https://auth-backend-mohsin-raza-developers-projects.vercel.app';
 
   const [email, setEmail] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -25,7 +25,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSuccess }) =>
     setSuccessMessage('');
 
     try {
-      const response = await axios.post(`${apiBaseUrl}/api/auth/reset-password/request`, { email });
+      const response = await axios.post(`${authBaseUrl}/api/auth/reset-password/request`, { email });
 
       if (response.status === 200) {
         setSuccessMessage('Password reset email sent if email exists. Please check your inbox.');

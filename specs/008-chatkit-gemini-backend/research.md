@@ -1,842 +1,905 @@
-# Research & Technology Decisions: ChatKit Gemini Backend
+# Research: ChatKit-Integrated Robotics Chatbot Backend
 
-**Feature**: 008-chatkit-gemini-backend
-**Date**: 2025-12-23
-**Purpose**: Document all technology choices, integration patterns, and architectural decisions for the self-hosted ChatKit backend with Google Gemini
-
----
-
-## Executive Summary
-
-This backend integrates OpenAI ChatKit Python SDK with Google Gemini (via OpenAI Agents SDK) to create a production-ready, self-hosted chat application. Key decisions prioritize leveraging existing infrastructure (Neon PostgreSQL, existing auth system), using SDK-provided patterns (ChatKit for API structure, Agents SDK for AI logic), and maintaining compatibility with ChatKit React frontend components.
+**Feature ID**: 008-chatkit-gemini-backend
+**Research Date**: 2025-12-25
+**Status**: Complete
 
 ---
 
-## 1. Primary Language & Runtime
+## Research Objectives
 
-### Decision: Python 3.12+
-
-**Rationale**:
-- **Constitution Alignment**: Backend requirements specify "FastAPI (Python 3.12+) with async/await patterns"
-- **SDK Compatibility**: Both ChatKit Python SDK and OpenAI Agents SDK are Python-native
-- **Async Support**: Python 3.12's improved async/await performance critical for streaming responses
-- **Team Familiarity**: Existing codebase uses Python (embeddings generation, auth backend uses Next.js but API logic could integrate)
-
-**Alternatives Considered**:
--  TypeScript/Node.js: Rejected - ChatKit Python SDK is the official backend SDK; TypeScript would require custom implementation
-- Python 3.11: Rejected - 3.12 offers performance improvements for async operations
-
-**Implementation Notes**:
-- Use `pyenv` or `asdf` for Python version management
-- Specify `python = "^3.12"` in pyproject.toml
-- Leverage `async`/`await` throughout for I/O operations
+1. Understand ChatKit Store interface requirements for PostgreSQL implementation
+2. Learn Agent SDK integration patterns with ChatKit
+3. Determine best practices for function_tool decorators
+4. Research streaming patterns for SSE responses
+5. Understand context passing and authentication patterns
 
 ---
 
-## 2. Web Framework
+## Research Source
 
-### Decision: FastAPI 0.115+
+**Primary Source**: Context7 - `/openai/chatkit-python` (ChatKit Python SDK)
+- **Code Snippets**: 40
+- **Source Reputation**: High
+- **Benchmark Score**: 59.3
 
-**Rationale**:
-- **Constitution Mandate**: Explicitly required in backend requirements
-- **Async-First**: Native async support essential for SSE streaming and concurrent requests
-- **ChatKit Integration**: ChatKit Python SDK designed to work seamlessly with FastAPI/Starlette
-- **Performance**: Handles 100+ concurrent users requirement (FR-003 success criteria)
-- **Developer Experience**: Auto-generated OpenAPI docs, type safety with Pydantic
+**Reference Implementation**: `/openai/openai-chatkit-advanced-samples`
+- **Code Snippets**: 103
+- **Source Reputation**: High
+- **Benchmark Score**: 61
 
-**Alternatives Considered**:
-- Flask: Rejected - lacks native async support, would require extensions
-- Django: Rejected - too heavyweight for API-only service, slower async adoption
+---
 
-**Implementation Notes**:
+## Key Findings
+
+### 1. ChatKit Store Interface Implementation
+
+#### Decision
+Implement custom PostgreSQL Store class extending `chatkit.stores.Store` base class.
+
+#### Rationale
+- ChatKit provides abstract `Store` base class with 14 required methods
+- Allows custom database implementation (PostgreSQL via SQLAlchemy)
+- Type-safe with generic `TContext` for passing request context
+- Supports thread metadata, items, and attachments (though we're text-only)
+
+#### Required Methods (from Context7 research)
+
+**From ChatKit Python SDK documentation**:
+
 ```python
-from fastapi import FastAPI
-from fastapi.responses import StreamingResponse
-import uvicorn
+from abc import ABC
+from typing import Generic, TypeVar
+from chatkit.models import Attachment, Page, ThreadItem, ThreadMetadata
+
+TContext = TypeVar("TContext")
+
+class Store(ABC, Generic[TContext]):
+    # ID Generation
+    def generate_thread_id(self, context: TContext) -> str: ...
+    def generate_item_id(
+        self,
+        item_type: Literal["message", "tool_call", "task", "workflow", "attachment"],
+        thread: ThreadMetadata,
+        context: TContext,
+    ) -> str: ...
+
+    # Thread Operations
+    async def load_thread(self, thread_id: str, context: TContext) -> ThreadMetadata: ...
+    async def save_thread(self, thread: ThreadMetadata, context: TContext) -> None: ...
+    async def load_threads(
+        self,
+        limit: int,
+        after: str | None,
+        order: str,
+        context: TContext,
+    ) -> Page[ThreadMetadata]: ...
+    async def delete_thread(self, thread_id: str, context: TContext) -> None: ...
+
+    # Thread Items (Messages)
+    async def load_thread_items(
+        self,
+        thread_id: str,
+        after: str | None,
+        limit: int,
+        order: str,
+        context: TContext,
+    ) -> Page[ThreadItem]: ...
+    async def add_thread_item(
+        self, thread_id: str, item: ThreadItem, context: TContext
+    ) -> None: ...
+    async def save_item(
+        self, thread_id: str, item: ThreadItem, context: TContext
+    ) -> None: ...
+    async def load_item(
+        self, thread_id: str, item_id: str, context: TContext
+    ) -> ThreadItem: ...
+
+    # Attachments (NOT NEEDED - text-only chatbot)
+    async def save_attachment(self, attachment: Attachment, context: TContext) -> None: ...
+    async def load_attachment(self, attachment_id: str, context: TContext) -> Attachment: ...
+    async def delete_attachment(self, attachment_id: str, context: TContext) -> None: ...
+```
+
+**Our Implementation Strategy**:
+- Implement all required methods
+- Use SQLAlchemy async ORM for database operations
+- Use UUID for `generate_thread_id()` and `generate_item_id()`
+- Map ChatKit `ThreadItem` to our `Message` model
+- Map ChatKit `ThreadMetadata` to our `Thread` model
+- Skip attachment methods (raise `NotImplementedError` - text-only chatbot)
+
+**Context Type**:
+```python
+TContext = dict  # {"user_id": str, "request": Request}
+```
+
+**Alternatives Considered**:
+- MemoryStore (pre-built) - Rejected: Not persistent
+- Custom SQL without ORM - Rejected: More complex, less type-safe
+
+---
+
+### 2. Agent SDK Integration with ChatKit
+
+#### Decision
+Use `stream_agent_response()` helper to convert Agent SDK events to ChatKit format.
+
+#### Rationale
+- ChatKit provides `stream_agent_response()` utility function
+- Automatically converts Agent SDK run events to ChatKit `ThreadStreamEvent`
+- Handles action events (tool calls) automatically
+- No manual SSE formatting needed
+
+#### Implementation Pattern (from Context7)
+
+```python
+from chatkit.server import ChatKitServer, ThreadStreamEvent
+from chatkit.models import UserMessageItem, ThreadMetadata
+from agents.sdk.agent import Agent
+from agents.sdk.runner import Runner
+from agents.sdk.utils import simple_to_agent_input
+from chatkit.agents import AgentContext, stream_agent_response
+from typing import AsyncIterator, Any
+
+class RoboticsChatbotServer(ChatKitServer):
+    def __init__(self, data_store: Store):
+        super().__init__(data_store, attachment_store=None)  # No attachments
+
+    # Define agent as class attribute
+    assistant_agent = Agent(
+        model="gemini-2.5-flash",
+        name="Robotics Tutor",
+        instructions="You are an expert robotics tutor...",
+        tools=[search_textbook]  # Our custom tool
+    )
+
+    async def respond(
+        self,
+        thread: ThreadMetadata,
+        input: UserMessageItem | None,
+        context: Any,
+    ) -> AsyncIterator[ThreadStreamEvent]:
+        """Generate AI response with knowledge base search."""
+
+        # Create AgentContext
+        agent_context = AgentContext(
+            thread=thread,
+            store=self.store,
+            request_context=context,  # Contains user_id, request
+        )
+
+        # Run agent with streaming
+        result = Runner.run_streamed(
+            self.assistant_agent,
+            await simple_to_agent_input(input) if input else [],
+            context=agent_context,
+        )
+
+        # Stream response (auto-converts to ChatKit events)
+        async for event in stream_agent_response(agent_context, result):
+            yield event
+```
+
+**Key Functions**:
+- `simple_to_agent_input()` - Converts ChatKit `UserMessageItem` to Agent SDK input format
+- `stream_agent_response()` - Converts Agent SDK events to ChatKit `ThreadStreamEvent`
+- `AgentContext` - Wrapper containing thread, store, and request context
+
+**Event Conversion (automatic)**:
+```
+Agent SDK Event         →  ChatKit Event Type
+──────────────────────     ──────────────────
+AgentRunStarted         →  message_start
+ToolCallStarted         →  action (status="started")
+ToolCallCompleted       →  action (status="completed")
+ContentDelta            →  content_delta
+AgentRunCompleted       →  message_end
+```
+
+**Alternatives Considered**:
+- Manual SSE formatting - Rejected: ChatKit helper handles this
+- Direct OpenAI API - Rejected: ChatKit requires Agent SDK integration
+
+---
+
+### 3. Function Tool Decorator for Knowledge Base Search
+
+#### Decision
+Use `@function_tool` decorator with `RunContextWrapper[AgentContext]` for Qdrant integration.
+
+#### Rationale
+- Agent SDK standard pattern for custom tools
+- Provides typed context access (`ctx.context`)
+- Allows streaming widgets (not needed for text-only, but future-proof)
+- Automatic action event emission in ChatKit
+
+#### Implementation Pattern (from Context7)
+
+```python
+from agents.sdk.decorators import function_tool
+from agents.sdk.types import RunContextWrapper
+from chatkit.agents import AgentContext
+import json
+
+@function_tool(description_override="Search the robotics textbook for relevant content.")
+async def search_textbook(
+    ctx: RunContextWrapper[AgentContext],
+    query: str
+) -> str:
+    """
+    Search the Physical AI textbook for relevant content.
+
+    Args:
+        query: Search query (e.g., "inverse kinematics")
+
+    Returns:
+        JSON string with search results and citation metadata
+    """
+    # Access Qdrant client
+    from app.services.qdrant_service import qdrant_client
+
+    results = await qdrant_client.search(
+        collection_name="textbook_content",
+        query_text=query,
+        limit=5
+    )
+
+    # Format results for agent
+    formatted = []
+    for idx, result in enumerate(results, 1):
+        formatted.append({
+            "ref_num": idx,
+            "content": result.payload["text"],
+            "chapter": result.payload["chapter"],
+            "section": result.payload["section"],
+            "title": result.payload["title"]
+        })
+
+    # Return JSON (agent will parse and use in response)
+    return json.dumps(formatted, ensure_ascii=False)
+```
+
+**Context Access**:
+```python
+# Within tool function, access AgentContext:
+thread = ctx.context.thread  # ThreadMetadata
+store = ctx.context.store    # Store instance
+request_context = ctx.context.request_context  # {"user_id": ...}
+```
+
+**UI Display (automatic)**:
+- Tool call emits `action` event with `status="started"`
+- Frontend displays: "🔍 Searching textbook..."
+- Tool completion emits `action` event with `status="completed"`
+- Frontend displays: "✅ Found content (450ms)"
+
+**Alternatives Considered**:
+- Pre-retrieval (search before agent run) - Rejected: Less flexible, agent can't decide when to search
+- Client-side tool - Rejected: Qdrant must stay server-side
+
+---
+
+### 4. Server Context Passing for Authentication
+
+#### Decision
+Pass `user_id` via server context, validate in Store methods.
+
+#### Rationale
+- ChatKit supports arbitrary context dictionary
+- Context flows through all Store methods
+- Enables authorization checks (thread ownership)
+- Better Auth session ID → user_id extracted by middleware
+
+#### Implementation Pattern (from Context7)
+
+```python
+# In FastAPI endpoint
+@app.post("/chatkit")
+async def chatkit_endpoint(request: Request, user_id: str = Depends(get_current_user)):
+    """
+    ChatKit endpoint with Better Auth session validation.
+
+    Middleware extracts user_id from Authorization header.
+    """
+    result = await server.process(
+        await request.body(),
+        context={"user_id": user_id, "request": request}  # ← Context
+    )
+
+    if isinstance(result, StreamingResult):
+        return StreamingResponse(result, media_type="text/event-stream")
+    else:
+        return Response(content=result.json, media_type="application/json")
+```
+
+```python
+# In Store implementation
+class PostgresStore(Store):
+    async def load_thread(self, thread_id: str, context: dict) -> ThreadMetadata:
+        """Load thread with ownership check."""
+        user_id = context["user_id"]
+
+        # Query database
+        thread = await self.db.query(Thread).filter_by(thread_id=thread_id).first()
+
+        if not thread:
+            raise NotFoundError("Thread not found")
+
+        # Authorization check
+        if str(thread.user_id) != user_id:
+            raise ForbiddenError("Access denied")
+
+        return thread.to_metadata()
+```
+
+**Context Structure**:
+```python
+{
+    "user_id": "uuid-string",      # From Better Auth session
+    "request": Request,            # FastAPI request object
+}
+```
+
+**Alternatives Considered**:
+- Thread-local storage - Rejected: Not async-safe
+- Global state - Rejected: Not thread-safe with concurrent requests
+
+---
+
+### 5. Thread Metadata Management
+
+#### Decision
+Use `thread.metadata` dict for storing `previous_response_id` and custom fields.
+
+#### Rationale
+- ChatKit `ThreadMetadata.metadata` is arbitrary JSON dict
+- Allows storing Agent SDK `response_id` for efficient re-runs
+- Can store custom fields (e.g., auto-title flag)
+
+#### Implementation Pattern (from Context7)
+
+```python
+async def respond(
+    self,
+    thread: ThreadMetadata,
+    input: UserMessageItem | None,
+    context: Any,
+) -> AsyncIterator[ThreadStreamEvent]:
+    """Generate response with metadata management."""
+
+    # Get previous response_id from thread metadata
+    previous_response_id = thread.metadata.get("previous_response_id")
+
+    # Create agent context
+    agent_context = AgentContext(
+        thread=thread,
+        store=self.store,
+        request_context=context,
+    )
+
+    # Run agent with previous_response_id (optimization)
+    result = Runner.run_streamed(
+        self.assistant_agent,
+        await simple_to_agent_input(input) if input else [],
+        context=agent_context,
+        previous_response_id=previous_response_id,  # ← Reuse previous run
+    )
+
+    # Stream response
+    async for event in stream_agent_response(agent_context, result):
+        yield event
+
+    # Save new response_id for next run
+    thread.metadata["previous_response_id"] = result.response_id
+    await self.store.save_thread(thread, context)
+```
+
+**Metadata Fields We'll Use**:
+```python
+{
+    "previous_response_id": "uuid-string",  # Agent SDK optimization
+    "auto_titled": bool,                    # Whether title auto-generated
+}
+```
+
+**Alternatives Considered**:
+- Separate metadata table - Rejected: ChatKit already provides metadata dict
+- Store in message content - Rejected: Not appropriate
+
+---
+
+### 6. Automatic Thread Title Generation
+
+#### Decision
+Use separate agent run to generate title from first user message (optional).
+
+#### Rationale
+- ChatKit pattern for automatic thread titling
+- Runs asynchronously (doesn't block response)
+- Only runs if thread.title is None
+
+#### Implementation Pattern (from Context7)
+
+```python
+async def maybe_update_thread_title(
+    self,
+    thread: ThreadMetadata,
+    input_item: UserMessageItem,
+) -> None:
+    """Generate thread title from first message."""
+    if thread.title is not None:
+        return  # Already has title
+
+    # Create title generation agent
+    title_agent = Agent(
+        model="gemini-2.5-flash",
+        name="Title Generator",
+        instructions="Generate a concise 3-5 word title for this conversation."
+    )
+
+    # Convert user message to agent input
+    agent_input = await simple_to_agent_input(input_item)
+
+    # Run title generation (non-streaming)
+    run = await Runner.run(title_agent, input=agent_input)
+
+    # Update thread title
+    thread.title = run.final_output
+    await self.store.save_thread(thread, {})
+
+async def respond(
+    self,
+    thread: ThreadMetadata,
+    input: UserMessageItem | None,
+    context: Any,
+) -> AsyncIterator[ThreadStreamEvent]:
+    """Generate response with auto-titling."""
+
+    # Trigger auto-title (async, non-blocking)
+    if input is not None:
+        asyncio.create_task(self.maybe_update_thread_title(thread, input))
+
+    # Generate model response (main flow)
+    # ...
+```
+
+**Decision for Our Project**: **NOT IMPLEMENTING** in MVP
+- User can provide title when creating thread
+- Reduces API calls to Gemini
+- Simpler implementation
+- Can add later if needed
+
+**Alternatives Considered**:
+- Title from first N words - Rejected: Not meaningful
+- Manual title only - Accepted: Simpler for MVP
+
+---
+
+### 7. FastAPI Integration
+
+#### Decision
+Single `/chatkit` POST endpoint with StreamingResponse for SSE.
+
+#### Rationale
+- ChatKit protocol uses single endpoint for all operations
+- Action determined by request body (`action` field)
+- Returns SSE stream or JSON based on response type
+
+#### Implementation Pattern (from Context7)
+
+```python
+from fastapi import FastAPI, Request
+from fastapi.responses import Response, StreamingResponse
+from chatkit.server import StreamingResult
 
 app = FastAPI()
 
-# ChatKit will provide route handlers
-# OpenAI Agents SDK handles AI logic within routes
-```
-
-**Key Dependencies**:
-- `fastapi[standard]>=0.115.0` (includes uvicorn, pydantic v2)
-- `uvicorn[standard]` for ASGI server with WebSocket/SSE support
--  `python-multipart` for file upload handling
-
----
-
-## 3. AI/LLM Integration
-
-### Decision: Google Gemini 2.0 Flash via OpenAI Agents SDK
-
-**Rationale**:
-- **Specification Requirement**: "Must use Google Gemini as the primary LLM"
-- **Agents SDK Compatibility**: OpenAI Agents SDK supports custom LLM backends via `AsyncOpenAI` client
-- **Proven Pattern**: User provided working example code demonstrating Gemini + Agents SDK integration
-- **Cost Efficiency**: Gemini 2.0 Flash offers competitive pricing vs GPT-4
-- **Streaming Support**: Gemini API supports streaming responses required by FR-011
-
-**Integration Pattern** (from user-provided example):
-```python
-from agents import Agent, AsyncOpenAI, OpenAIChatCompletionsModel, RunConfig, Runner,function_tool
-from dotenv import load_dotenv
-import os
-
-# Configure Gemini via OpenAI-compatible endpoint
-gemini_client = AsyncOpenAI(
-    api_key=os.environ["GEMINI_API_KEY"],
-    base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
-)
-
-model = OpenAIChatCompletionsModel(
-    model="gemini-2.0-flash",
-    openai_client=gemini_client
-)
-
-config = RunConfig(model=model, tracing_disabled=True)
-
-@function_tool
-async def tool_name(args : str):
-    return "tool"
-
-chat_agent = Agent(
-    name="Chatbot",
-    instructions="You are a helpful robotics tutor for the Physical AI and Humanoid Robotics course.",
-    tools = [tool_name]
-)
-
-
-# Usage in endpoint
-result = await Runner.run(
-    starting_agent=chat_agent,
-    input=user_message,
-    run_config=config
-)
-```
-
-**Alternatives Considered**:
-- OpenAI GPT-4: Rejected per spec constraint - must use Gemini
-- Anthropic Claude: Rejected - spec mandates Gemini; Claude integration more complex
-- Local LLaMA/Mistral: Rejected - lacks streaming quality, requires GPU infrastructure
-
-**Implementation Notes**:
-- Store `GEMINI_API_KEY` in environment variables
-- Implement retry logic with exponential backoff for API failures (FR-047)
-- Monitor rate limits (Gemini free tier: 15 requests/minute, 1500/day)
-- Consider upgrading to paid tier for production (1000 requests/minute)
-
-**API Documentation**:
-- Gemini API: https://ai.google.dev/docs
-- OpenAI Agents SDK: https://openai.github.io/openai-agents-python/quickstart/
-
----
-
-## 4. ChatKit SDK Integration
-
-### Decision: ChatKit Python SDK for Backend API Structure
-
-**Rationale**:
-- **Specification Requirement**: "Build a production-ready FastAPI backend for OpenAI ChatKit"
-- **Built-In Features**: Provides streaming, widgets, progress events, client effects out-of-the-box
-- **Frontend Compatibility**: Ensures API contract matches ChatKit React SDK expectations
-- **Reduced Implementation**: Eliminates need to manually implement SSE streaming, widget schemas, event formats
-- **Proven Patterns**: Official SDK provides best practices for chat applications
-
-**Key ChatKit Features Used**:
-- **Streaming Responses**: Built-in SSE support for FR-011
-- **Widget System**: Pre-defined widget types for FR-019-022
-- **Progress Events**: Event emitters for FR-023-026
-- **Client Effects**: Effect payload structure for FR-027-030
-
-**Integration Approach**:
-```python
-from chatkit import ChatKitApp, Thread, Message, StreamingResponse
-
-app = ChatKitApp(fastapi_app=fastapi_app)
-
-@app.post("/threads/{thread_id}/messages")
-async def send_message(thread_id: str, message: MessageCreate):
-    # OpenAI Agents SDK handles AI logic
-    agent_result = await Runner.run(agent, input=message.content)
-
-    # ChatKit SDK handles streaming format
-    return await app.stream_response(agent_result)
-```
-
-**Alternatives Considered**:
-- Custom Implementation: Rejected - reinventing ChatKit's streaming/widget system error-prone, more code
-- LangChain LangServe: Rejected - doesn't provide ChatKit-compatible API structure
-
-**Implementation Notes**:
-- Install: `pip install chatkit-python`
-- Reference: https://openai.github.io/chatkit-python/
-- Advanced samples: https://github.com/openai/openai-chatkit-advanced-samples
-
----
-
-## 5. Knowledge Base Tool
-
-### Decision: search_knowledge_base Function Tool (Cohere + Qdrant)
-
-**Rationale**:
-- **Existing Infrastructure**: User already has embeddings generated with Cohere embed-v4.0 in Qdrant Cloud
-- **Working Implementation**: User provided `tool_example.py` with proven integration pattern
-- **Agents SDK Compatibility**: `@function_tool` decorator integrates seamlessly with OpenAI Agents SDK
-- **Automatic Tool Calling**: Agent autonomously decides when to invoke knowledge search (no manual triggers)
-
-**Implementation** (from user-provided code):
-```python
-from agents import function_tool
-from qdrant_client import QdrantClient
-import cohere
-import asyncio
-
-@function_tool
-def search_knowledge_base(query: str) -> str:
-    """Search the robotics textbook knowledge base for relevant content."""
-    async def _run():
-        # Embed query with Cohere
-        embedding = cohere_client.embed(
-            texts=[query],
-            model="embed-v4.0",
-            input_type="search_query"
-        ).embeddings[0]
-
-        # Vector search in Qdrant
-        results = qdrant_client.query_points(
-            collection_name="robotics_textbook_v1",
-            query=embedding,
-            limit=5,
-            score_threshold=0.4
-        ).points
-
-        if not results:
-            return "No relevant content found."
-
-        return "\n".join(f"- {r.payload.get('text','')}" for r in results)
-
-    return asyncio.run(_run())
-
-# Agent automatically calls this tool when needed
-agent = Agent(
-    name="Chatbot",
-    instructions="...",
-    tools=[search_knowledge_base]
-)
-```
-
-**Configuration**:
-- **Qdrant**: Cloud Free Tier (1GB storage, 1M vectors)
-- **Cohere**: Free tier (100 API calls/month for embeddings)
-- **Collection**: `robotics_textbook_v1` (already populated)
-- **Embedding Model**: `embed-v4.0` (1536 dimensions)
-- **Similarity Threshold**: 0.4 (balances precision/recall)
-
-**Alternatives Considered**:
-- Direct database access from agent: Rejected - violates separation of concerns, agent should use tools
-- Different embedding model: Rejected - must match existing Cohere embeddings for compatibility
-- Different vector DB: Rejected - Qdrant already set up and populated
-
-**Implementation Notes**:
-- Reuse existing Qdrant credentials (`QDRANT_URL`, `QDRANT_API_KEY`)
-- Reuse existing Cohere credentials (`COHERE_API_KEY`)
-- Tool context management pattern (AsyncExitStack) from user's example code
-- Monitor Cohere API usage (free tier limits)
-
----
-
-## 6. Database & Storage
-
-### Decision: Neon PostgreSQL (Existing Auth Database)
-
-**Rationale**:
-- **User Decision**: Confirmed during clarification - use existing Neon database
-- **Simplified Architecture**: Single database for auth + chatbot reduces operational complexity
-- **Data Integration**: Easy to query user profiles (first_name, last_name, software_level) via joins
-- **Cost Efficiency**: No additional database subscription needed
-- **Proven Reliability**: Already in production for auth system
-
-**Schema Approach**:
-- **Same Database, Same Schema**: Add new tables alongside existing `users`, `sessions` tables
-- **New Tables**: `threads`, `messages`, `attachments`
-- **Foreign Keys**: `threads.user_id` → `users.id` for data integrity
-
-**Database Tables** (detailed design in data-model.md):
-```sql
--- New tables to add
-CREATE TABLE threads (
-    thread_id UUID PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    title VARCHAR(255),
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE messages (
-    message_id UUID PRIMARY KEY,
-    thread_id UUID NOT NULL REFERENCES threads(thread_id) ON DELETE CASCADE,
-    role VARCHAR(20) NOT NULL CHECK (role IN ('user', 'assistant')),
-    content TEXT NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    sequence_number INTEGER NOT NULL
-);
-
-CREATE TABLE attachments (
-    attachment_id UUID PRIMARY KEY,
-    message_id UUID NOT NULL REFERENCES messages(message_id) ON DELETE CASCADE,
-    file_name VARCHAR(255) NOT NULL,
-    file_type VARCHAR(100),
-    file_size BIGINT,
-    storage_url TEXT NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-```
-
-**ORM Decision**: SQLAlchemy 2.0+ with AsyncIO support
-- **Async ORM**: `asyncpg` driver for async database operations
-- **Type Safety**: Pydantic integration for request/response models
-- **Migrations**: Alembic for schema versioning
-
-**Alternatives Considered**:
-- Separate Neon instance for chatbot: Rejected - unnecessary complexity, extra cost
-- MongoDB: Rejected - spec requires relational data, user chose PostgreSQL
-- SQLite: Rejected - not suitable for production, lacks async support
-
-**Implementation Notes**:
-- Use existing Neon connection string
-- Add connection pooling configuration (`max_connections=20`)
-- Implement database migrations with Alembic
-- Add indexes on frequently queried fields (`user_id`, `thread_id`, `created_at`)
-
----
-
-## 7. Object Storage (Attachments)
-
-### Decision: Cloudflare R2 (S3-Compatible)
-
-> **Note**: This is a **Phase 3 feature** (Week 4-5). NOT required for MVP. The MVP (Phase 1) focuses on text-only conversations without file attachments. See plan.md for implementation timeline.
-
-**Rationale**:
-- **Cost Efficiency**: R2 offers free egress (no bandwidth charges), S3 charges per GB downloaded
-- **S3 Compatibility**: Works with existing S3 SDKs (`boto3`)
-- **Generous Free Tier**: 10GB storage free, sufficient for MVP
-- **Signed URL Support**: Pre-signed URLs for direct client uploads/downloads (FR-035, FR-038)
-- **Global CDN**: Low latency for file downloads
-
-**Configuration**:
-```python
-import boto3
-from botocore.client import Config
-
-r2_client = boto3.client(
-    's3',
-    endpoint_url=os.environ['R2_ENDPOINT_URL'],
-    aws_access_key_id=os.environ['R2_ACCESS_KEY_ID'],
-    aws_secret_access_key=os.environ['R2_SECRET_ACCESS_KEY'],
-    config=Config(signature_version='s3v4'),
-    region_name='auto'
-)
-
-# Generate upload URL
-upload_url = r2_client.generate_presigned_url(
-    'put_object',
-    Params={'Bucket': 'chatbot-attachments', 'Key': file_key},
-    ExpiresIn=3600  # 1 hour
-)
-```
-
-**Alternatives Considered**:
-- AWS S3: Higher cost due to egress fees; R2 more economical for educational project
-- MinIO (self-hosted): Requires infrastructure management; R2 managed service preferred
-- Neon Blob Storage: Not available; Neon is PostgreSQL-focused
-
-**Implementation Notes**:
-- Bucket structure: `chatbot-attachments/{user_id}/{thread_id}/{file_id}`
-- Retention policy: Delete attachments when thread is deleted (CASCADE)
-- File size limit: 10MB per file (FR-039)
-- Allowed MIME types: Whitelist for security
-
----
-
-## 8. Authentication Integration
-
-### Decision: JWT Token Validation (Existing Auth System)
-
-**Rationale**:
-- **Existing Infrastructure**: Auth backend already issues JWT tokens
-- **Custom Fetch Pattern**: ChatKit React SDK supports custom fetch with auth headers (FR-007)
-- **Stateless**: No session storage needed in chatbot backend
-- **User Context**: Decode JWT to get `user_id` for thread ownership (FR-009)
-
-**Integration Flow**:
-```
-1. User logs in → Auth Backend → JWT token issued
-2. Frontend stores JWT
-3. ChatKit React SDK → Custom fetch injects Authorization header
-4. ChatBot Backend → Validate JWT signature
-5. Extract user_id → Associate with thread
-```
-
-**JWT Validation** (FastAPI dependency):
-```python
-from fastapi import Depends, HTTPException, Header
-import jwt
-
-async def get_current_user(authorization: str = Header()):
-    try:
-        token = authorization.replace("Bearer ", "")
-        payload = jwt.decode(
-            token,
-            os.environ["JWT_SECRET"],
-            algorithms=["HS256"]
-        )
-        return payload["user_id"]
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-
-# Use in routes
-@app.post("/threads")
-async def create_thread(user_id: str = Depends(get_current_user)):
-    # user_id authenticated and available
-```
-
-**Alternatives Considered**:
-- OAuth2 Password Flow: Rejected - adds complexity, existing auth system works
-- Session Cookies: Rejected - stateless JWT preferred for API
-
-**Implementation Notes**:
-- Share `JWT_SECRET` between auth backend and chatbot backend (environment variable)
-- Implement token expiration checks
-- Add rate limiting per user_id to prevent abuse
-
----
-
-## 9. API Structure & Endpoints
-
-### Decision: ChatKit-Compatible REST API
-
-**Rationale**:
-- **ChatKit SDK Requirement**: Frontend ChatKit React SDK expects specific endpoint structure
-- **RESTful Conventions**: Standard HTTP methods for resource operations
-- **SSE Streaming**: Server-Sent Events for real-time response delivery
-
-**Core Endpoints** (detailed in contracts/openapi.yaml):
-```
-POST   /api/threads                    # Create new thread
-GET    /api/threads                    # List user's threads
-GET    /api/threads/{thread_id}        # Get thread details
-DELETE /api/threads/{thread_id}        # Delete thread
-
-POST   /api/threads/{thread_id}/messages  # Send message (streaming response)
-GET    /api/threads/{thread_id}/messages  # Get message history
-
-POST   /api/attachments/upload-url     # Generate signed upload URL
-GET    /api/attachments/{id}/download-url # Generate signed download URL
-```
-
-**Response Format** (ChatKit standard):
-```json
-{
-  "type": "message",
-  "id": "msg_123",
-  "thread_id": "thread_456",
-  "role": "assistant",
-  "content": "Here's the answer...",
-  "created_at": "2025-12-23T10:00:00Z",
-  "metadata": {
-    "actions": [...],       // Agentic actions (FR-015)
-    "widgets": [...],       // Interactive widgets (FR-019)
-    "progress": [...],      // Progress updates (FR-023)
-    "client_effects": [...]  // UI effects (FR-027)
-  }
-}
-```
-
-**Streaming Format** (SSE):
-```
-event: message_start
-data: {"type": "message_start", "message_id": "msg_123"}
-
-event: content_delta
-data: {"type": "content_delta", "delta": "Hello"}
-
-event: content_delta
-data: {"type": "content_delta", "delta": " world"}
-
-event: message_end
-data: {"type": "message_end"}
-```
-
-**Implementation Notes**:
-- Use FastAPI `StreamingResponse` for SSE
-- Add CORS middleware for frontend integration
-- Implement request/response logging for debugging
-
----
-
-## 10. Development & Deployment
-
-### Decision: Railway/Render for Hosting
-
-**Rationale**:
-- **Constitution Alignment**: "Backend: Railway (FastAPI service)"
-- **Free Tier**: Both offer free tiers sufficient for MVP
-- **Python Support**: Native Python/FastAPI support
-- **Auto-Deploy**: GitHub integration for CI/CD
-- **Environment Variables**: Secure secret management
-
-**Recommended**: **Railway**
-- More generous free tier (500 hours/month)
-- Better async/WebSocket support for SSE
-- Easier database integration (Neon)
-
-**Deployment Configuration**:
-```toml
-# railway.toml
-[build]
-builder = "NIXPACKS"
-buildCommand = "pip install -r requirements.txt"
-
-[deploy]
-startCommand = "uvicorn main:app --host 0.0.0.0 --port $PORT"
-healthcheckPath = "/health"
-healthcheckTimeout = 100
-restartPolicyType = "ON_FAILURE"
-restartPolicyMaxRetries = 10
-```
-
-**Environment Variables** (Railway dashboard):
-```
-DATABASE_URL=postgresql://...
-GEMINI_API_KEY=...
-COHERE_API_KEY=...
-QDRANT_URL=...
-QDRANT_API_KEY=...
-R2_ENDPOINT_URL=...
-R2_ACCESS_KEY_ID=...
-R2_SECRET_ACCESS_KEY=...
-JWT_SECRET=...
-```
-
-**Alternatives Considered**:
-- Vercel: Rejected - optimized for Next.js, not ideal for long-running SSE connections
-- Fly.io: Valid alternative, slightly more complex configuration
-- AWS EC2: Rejected - over-engineered for MVP, requires infrastructure management
-
-**Implementation Notes**:
-- Use `.env.example` for local development
-- Never commit `.env` to Git
-- Implement health check endpoint (`/health`)
-- Add logging with structured format (JSON)
-
----
-
-## 11. Testing Strategy
-
-### Decision: Pytest + FastAPI TestClient
-
-**Rationale**:
-- **Constitution Requirement**: Testing framework must be specified
-- **Async Support**: Pytest-asyncio for testing async routes
-- **FastAPI Integration**: TestClient simulates requests without running server
-- **Coverage**: pytest-cov for code coverage metrics
-
-**Test Levels**:
-1. **Unit Tests**: Individual functions (tools, utilities)
-2. **Integration Tests**: API endpoints with mocked LLM
-3. **Contract Tests**: Validate ChatKit API compliance
-4. **E2E Tests**: Full flow with test database
-
-**Example Test**:
-```python
-import pytest
-from fastapi.testclient import TestClient
-from main import app
-
-client = TestClient(app)
-
-@pytest.mark.asyncio
-async def test_create_thread():
-    response = client.post(
-        "/api/threads",
-        headers={"Authorization": "Bearer test_token"},
-        json={"title": "Test Thread"}
+# Initialize server
+data_store = PostgresStore()
+server = RoboticsChatbotServer(data_store)
+
+@app.post("/chatkit")
+async def chatkit_endpoint(
+    request: Request,
+    user_id: str = Depends(get_current_user)
+):
+    """
+    ChatKit protocol endpoint.
+
+    Handles all ChatKit operations:
+    - create_thread
+    - list_threads
+    - get_thread
+    - delete_thread
+    - send_message
+    - get_messages
+    """
+    # Process request
+    result = await server.process(
+        await request.body(),
+        context={"user_id": user_id, "request": request}
     )
-    assert response.status_code == 201
-    assert "thread_id" in response.json()
+
+    # Return appropriate response type
+    if isinstance(result, StreamingResult):
+        # SSE stream (for send_message)
+        return StreamingResponse(
+            result,
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no"  # Disable nginx buffering
+            }
+        )
+    else:
+        # JSON response (for other operations)
+        return Response(
+            content=result.json,
+            media_type="application/json"
+        )
 ```
 
-**Mocking Strategy**:
-- Mock Gemini API responses (avoid API costs in tests)
-- Mock Qdrant searches (use fixture data)
-- Mock Cohere embeddings (deterministic vectors)
+**Request Routing** (automatic by ChatKit):
+- `server.process()` handles routing based on `action` field
+- No need for multiple endpoints
+- ChatKit Server internally routes to appropriate method
 
-**Implementation Notes**:
-- Install: `pytest`, `pytest-asyncio`, `pytest-cov`, `httpx`
-- Target coverage: >80%
-- Run in CI/CD pipeline
+**Alternatives Considered**:
+- Multiple endpoints (/threads, /messages) - Rejected: ChatKit protocol requires single endpoint
+- WebSocket - Rejected: ChatKit uses SSE (simpler, HTTP-based)
 
 ---
 
-## 12. Monitoring & Observability
+## Technology Decisions
 
-### Decision: Structured Logging + Sentry (Error Tracking)
+### 1. Database: PostgreSQL with SQLAlchemy
 
-**Rationale**:
-- **FR-050-053**: Logging requirements explicitly defined
-- **Production Readiness**: Observability critical for debugging issues
-- **Free Tiers**: Sentry offers free error tracking
-
-**Logging Implementation**:
-```python
-import logging
-import structlog
-
-# Configure structured logging
-structlog.configure(
-    processors=[
-        structlog.stdlib.filter_by_level,
-        structlog.stdlib.add_logger_name,
-        structlog.stdlib.add_log_level,
-        structlog.processors.TimeStamper(fmt="iso"),
-        structlog.processors.JSONRenderer()
-    ],
-    logger_factory=structlog.stdlib.LoggerFactory(),
-)
-
-logger = structlog.get_logger()
-
-# Usage
-logger.info(
-    "message_sent",
-    user_id=user_id,
-    thread_id=thread_id,
-    message_length=len(content)
-)
-```
-
-**Sentry Integration**:
-```python
-import sentry_sdk
-from sentry_sdk.integrations.fastapi import FastAPIIntegration
-
-sentry_sdk.init(
-    dsn=os.environ["SENTRY_DSN"],
-    integrations=[FastAPIIntegration()],
-    traces_sample_rate=0.1,  # 10% of requests
-)
-```
-
-**Metrics to Track** (FR-052):
-- Request latency (p50, p95, p99)
-- Streaming duration
-- Error rates (by endpoint, by error type)
-- Gemini API usage (requests, tokens)
-- Qdrant search latency
-
-**Implementation Notes**:
-- Use environment variable for log level (`LOG_LEVEL=INFO`)
-- Sanitize PII from logs (don't log message content, only metadata)
-- Set up Sentry alerts for error spikes
-
----
-
-## 13. Title Generation Agent
-
-### Decision: Separate Gemini Agent (Lightweight Prompt)
+**Decision**: Use Neon PostgreSQL with SQLAlchemy async ORM
 
 **Rationale**:
-- **FR-031-034**: Title generation requirements
-- **Async Execution**: Don't block main response (FR-033)
-- **Cost Efficiency**: Use shorter prompt, no knowledge base search needed
+- Already in use for Better Auth
+- SQLAlchemy provides type-safe async operations
+- Alembic for migrations
+- Connection pooling built-in
 
 **Implementation**:
 ```python
-title_agent = Agent(
-    name="TitleGenerator",
-    instructions="""Generate a concise, descriptive title (max 50 characters)
-    for a conversation based on the first user message. Focus on the main topic.
-    Return only the title, no explanation."""
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import sessionmaker
+
+engine = create_async_engine(
+    os.getenv("DATABASE_URL"),
+    echo=False,
+    pool_size=20,
+    max_overflow=10
 )
 
-async def generate_title(first_message: str) -> str:
-    try:
-        result = await Runner.run(
-            starting_agent=title_agent,
-            input=first_message,
-            run_config=config
-        )
-        title = result.final_output[:50]  # Enforce max length
-        return title if title else "New Conversation"
-    except Exception:
-        return "New Conversation"  # Graceful fallback
+async_session = sessionmaker(
+    engine, class_=AsyncSession, expire_on_commit=False
+)
 
-# Call asynchronously after sending first message response
-asyncio.create_task(generate_title_and_update(thread_id, message))
+async def get_db():
+    async with async_session() as session:
+        yield session
 ```
-
-**Alternatives Considered**:
-- Rule-based extraction: Rejected - less accurate, misses context
-- Same agent as main chatbot: Rejected - requires separate instructions
-
-**Implementation Notes**:
-- Run in background task (don't await)
-- Implement timeout (5 seconds max)
-- Fallback to "New Conversation" on failure
-- Don't overwrite manually set titles
 
 ---
 
-## 14. Widget & Progress Event Schema
+### 2. AI Model: Google Gemini 2.5 Flash
 
-### Decision: ChatKit Standard Event Format
-
-**Rationale**:
-- **Frontend Compatibility**: ChatKit React SDK expects specific event structures
-- **Reduced Implementation**: SDK provides parsers/renderers
-- **Extensibility**: Can add custom widget types later
-
-**Widget Schema Example**:
-```json
-{
-  "type": "button_group",
-  "id": "widget_123",
-  "properties": {
-    "buttons": [
-      {"label": "Option A", "value": "a"},
-      {"label": "Option B", "value": "b"}
-    ]
-  },
-  "action_handler": "server"  // or "client"
-}
-```
-
-**Progress Event Schema**:
-```json
-{
-  "type": "progress_update",
-  "operation_id": "op_456",
-  "message": "Searching knowledge base...",
-  "progress_percentage": 30,
-  "timestamp": "2025-12-23T10:00:00Z"
-}
-```
-
-**Implementation Notes**:
-- Reference ChatKit docs for full schema
-- Validate widget/event schemas with Pydantic models
-- Emit progress events at tool execution start/end
-
----
-
-## 15. Security Considerations
-
-### Decision: Multi-Layer Security Approach
+**Decision**: Access via OpenAI-compatible endpoint
 
 **Rationale**:
-- **FR-048**: Input validation required
-- **Production Readiness**: Security critical for educational platform
+- Agent SDK supports OpenAI client
+- Gemini 2.5 Flash is cost-effective
+- Supports function calling (for our search_textbook tool)
 
-**Security Measures**:
-
-1. **Input Validation**:
-   - Pydantic models for request validation
-   - Max message length (10,000 chars)
-   - Sanitize user inputs (prevent injection)
-
-2. **Rate Limiting**:
+**Implementation**:
 ```python
-from slowapi import Limiter
-from slowapi.util import get_remote_address
+from openai import OpenAI
 
-limiter = Limiter(key_func=get_remote_address)
+client = OpenAI(
+    api_key=os.getenv("GEMINI_API_KEY"),
+    base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+)
 
-@app.post("/api/threads/{thread_id}/messages")
-@limiter.limit("10/minute")  # 10 messages per minute per user
-async def send_message(...):
+agent = Agent(
+    model="gemini-2.5-flash",
+    client=client,
+    instructions="...",
+    tools=[search_textbook]
+)
+```
+
+---
+
+### 3. Vector Search: Qdrant Cloud (Pre-existing)
+
+**Decision**: Use existing Qdrant collection with Cohere embeddings
+
+**Rationale**:
+- Textbook content already indexed
+- Cohere embed-v4.0 embeddings already generated
+- No need to re-index
+
+**Implementation**:
+```python
+from qdrant_client import QdrantClient
+
+qdrant_client = QdrantClient(
+    url=os.getenv("QDRANT_URL"),
+    api_key=os.getenv("QDRANT_API_KEY"),
+    timeout=5.0
+)
+
+# Search (inside function_tool)
+results = qdrant_client.search(
+    collection_name="textbook_content",
+    query_text=query,
+    limit=5
+)
+```
+
+---
+
+### 4. Authentication: Better Auth (Pre-existing)
+
+**Decision**: Validate sessions via database query
+
+**Rationale**:
+- Better Auth manages users and sessions
+- Backend is read-only
+- Session validation < 100ms (spec requirement)
+
+**Implementation**:
+```python
+from sqlalchemy import text
+
+async def validate_session(session_id: str, db: AsyncSession) -> str:
+    """Validate Better Auth session, return user_id."""
+    query = text("""
+        SELECT "userId", "expiresAt"
+        FROM session
+        WHERE id = :session_id
+    """)
+
+    result = await db.execute(query, {"session_id": session_id})
+    row = result.fetchone()
+
+    if not row:
+        raise AuthenticationError("Invalid session")
+
+    user_id, expires_at = row
+
+    # Check expiration
+    if expires_at < datetime.now(timezone.utc):
+        raise AuthenticationError("Session expired")
+
+    return str(user_id)
+```
+
+---
+
+## Performance Considerations
+
+### 1. Database Connection Pooling
+
+**Research Finding**: SQLAlchemy async pool recommended for concurrent requests
+
+**Configuration**:
+```python
+engine = create_async_engine(
+    DATABASE_URL,
+    pool_size=20,        # Max connections per instance
+    max_overflow=10,     # Additional connections if needed
+    pool_pre_ping=True,  # Verify connection before use
+)
+```
+
+---
+
+### 2. Qdrant Search Timeout
+
+**Research Finding**: Vector search should complete in < 500ms (spec requirement)
+
+**Configuration**:
+```python
+qdrant_client = QdrantClient(
+    url=QDRANT_URL,
+    api_key=QDRANT_API_KEY,
+    timeout=5.0  # 5 second timeout (allows for network latency)
+)
+```
+
+---
+
+### 3. Agent SDK Response Caching
+
+**Research Finding**: Use `previous_response_id` for efficient re-runs
+
+**Implementation**:
+```python
+# Store response_id in thread metadata
+result = Runner.run_streamed(
+    agent,
+    input=...,
+    previous_response_id=thread.metadata.get("previous_response_id")
+)
+
+# Save for next run
+thread.metadata["previous_response_id"] = result.response_id
+```
+
+---
+
+## Security Best Practices
+
+### 1. Context-Based Authorization
+
+**Research Finding**: Use context to pass user_id, check in Store methods
+
+**Pattern**:
+```python
+async def load_thread(self, thread_id: str, context: dict):
+    user_id = context["user_id"]
+    thread = await db.query(Thread).filter_by(thread_id=thread_id).first()
+
+    if thread.user_id != user_id:
+        raise ForbiddenError("Access denied")
+
+    return thread
+```
+
+---
+
+### 2. Input Validation
+
+**Research Finding**: ChatKit handles protocol validation, but sanitize tool inputs
+
+**Pattern**:
+```python
+@function_tool
+async def search_textbook(ctx, query: str) -> str:
+    # Sanitize query
+    query = query.strip()[:500]  # Max 500 chars
+
+    if not query:
+        return json.dumps({"error": "Empty query"})
+
+    # Proceed with search
     ...
 ```
 
-3. **CORS Configuration**:
-```python
-from fastapi.middleware.cors import CORSMiddleware
+---
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[os.environ["FRONTEND_URL"]],  # Specific origin
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "DELETE"],
-    allow_headers=["Authorization", "Content-Type"],
-)
+## Testing Strategies
+
+### 1. Store Interface Testing
+
+**Research Finding**: Test all required Store methods
+
+**Example**:
+```python
+@pytest.mark.asyncio
+async def test_store_load_thread():
+    store = PostgresStore()
+    context = {"user_id": "test-user"}
+
+    # Create thread
+    thread_id = store.generate_thread_id(context)
+    await store.save_thread(ThreadMetadata(id=thread_id), context)
+
+    # Load thread
+    loaded = await store.load_thread(thread_id, context)
+    assert loaded.id == thread_id
 ```
 
-4. **Secrets Management**:
-   - All API keys in environment variables
-   - Never log secrets
-   - Rotate keys periodically
+---
 
-5. **File Upload Security**:
-   - Validate file types (whitelist)
-   - Scan for malware (ClamAV integration optional)
-   - Enforce size limits
+### 2. Agent Tool Testing
 
-**Implementation Notes**:
-- Add security headers (HSTS, X-Content-Type-Options)
-- Implement CSRF protection if using cookies
-- Regular dependency updates (Dependabot)
+**Research Finding**: Test function_tool independently
+
+**Example**:
+```python
+@pytest.mark.asyncio
+async def test_search_textbook_tool():
+    # Mock context
+    class MockContext:
+        thread = ThreadMetadata(id="test")
+        store = None
+        request_context = {}
+
+    ctx = RunContextWrapper(context=MockContext())
+
+    # Test tool
+    result = await search_textbook(ctx, "inverse kinematics")
+    data = json.loads(result)
+
+    assert len(data) <= 5
+    assert all("content" in item for item in data)
+```
 
 ---
 
-## Open Questions & Future Research
+## Known Limitations
 
-### Resolved in Planning Phase:
-- ✅ Database choice: Neon PostgreSQL (existing)
-- ✅ ChatKit SDK usage: Yes (backend + frontend)
-- ✅ Development order: Backend first
-- ✅ Attachment retention: Thread lifetime
+### 1. Gemini API Rate Limits
 
-### Deferred to Implementation:
-- **Performance Tuning**: Exact connection pool sizes, cache TTLs (determine during load testing)
-- **Monitoring Dashboards**: Grafana/Prometheus setup (post-MVP)
-- **Advanced Features**: Multi-user collaboration, thread sharing (future phases)
+**Research Finding**: Gemini API may have different rate limits than OpenAI
+
+**Mitigation**:
+- Monitor rate limit headers
+- Implement exponential backoff
+- Consider API tier upgrade if needed
 
 ---
 
-## Technology Stack Summary
+### 2. ChatKit Store Type Shape Changes
 
-| Component | Technology | Version | Rationale |
-|-----------|-----------|---------|-----------|
-| **Language** | Python | 3.12+ | Async support, SDK compatibility |
-| **Web Framework** | FastAPI | 0.115+ | Async-first, ChatKit integration |
-| **LLM** | Google Gemini | 2.0 Flash | Spec requirement, cost-efficient |
-| **AI Framework** | OpenAI Agents SDK | Latest | Agentic workflows, tool calling |
-| **Chat SDK** | ChatKit Python | Latest | Backend API structure |
-| **Database** | Neon PostgreSQL | Latest | Existing infra, relational data |
-| **ORM** | SQLAlchemy | 2.0+ | Async support, migrations |
-| **Object Storage** | Cloudflare R2 | - | S3-compatible, free egress |
-| **Vector DB** | Qdrant Cloud | Free Tier | Existing embeddings |
-| **Embeddings** | Cohere embed-v4.0 | - | Existing model, 1536-dim |
-| **Auth** | JWT Validation | - | Existing auth system |
-| **Testing** | Pytest | Latest | Async testing, coverage |
-| **Logging** | Structlog | Latest | Structured JSON logs |
-| **Error Tracking** | Sentry | Free Tier | Production monitoring |
-| **Deployment** | Railway | - | Free tier, Python support |
+**Research Finding**: ChatKit may change ThreadItem/ThreadMetadata types across versions
+
+**Mitigation**:
+- Version-lock `openai-chatkit` dependency
+- Test after upgrades
+- Use flexible metadata dict (not typed fields)
+
+---
+
+## Alternatives Not Chosen
+
+### 1. Custom SSE Implementation (Rejected)
+
+**Why Rejected**: ChatKit provides `stream_agent_response()` helper
+- Manual SSE formatting is error-prone
+- ChatKit helper handles all event types
+- Frontend expects ChatKit event format
+
+---
+
+### 2. Pre-Retrieval Pattern (Rejected)
+
+**Why Rejected**: Agent Tool pattern is more flexible
+- Agent decides when to search (not always needed for follow-ups)
+- Better user experience (shows "Searching..." action)
+- Reduces unnecessary Qdrant calls
+
+---
+
+### 3. JWT-Based Authentication (Rejected)
+
+**Why Rejected**: Better Auth uses session-based auth
+- Better Auth already manages sessions in database
+- No need to introduce JWT complexity
+- Session validation is fast (< 100ms)
+
+---
+
+## Open Questions (Resolved)
+
+1. **How to pass user_id through ChatKit?** → Use server context dict
+2. **How to display tool calls in UI?** → ChatKit automatically emits action events
+3. **How to format citations?** → Inline Markdown footnotes (`[^1]`)
+4. **How to handle Qdrant timeout?** → Set 5s timeout, retry on failure
+5. **Do we need AttachmentStore?** → No, text-only chatbot
 
 ---
 
 ## Next Steps
 
-1. ✅ **Research Complete** → Proceed to Phase 1 (Data Model & Contracts)
-2. Create `data-model.md` with database schema
-3. Generate OpenAPI spec in `contracts/openapi.yaml`
-4. Write `quickstart.md` for developer onboarding
-5. Update agent context with new technologies
-6. Begin implementation with `/sp.tasks`
+1. ✅ Create `data-model.md` with entity definitions
+2. ✅ Create `contracts/` with OpenAPI schema
+3. ✅ Create `quickstart.md` for developer onboarding
+4. ⏳ Implement PostgresStore class
+5. ⏳ Implement RoboticsChatbotServer class
+6. ⏳ Implement search_textbook function_tool
+7. ⏳ Write unit tests for Store and Agent
+8. ⏳ Integration testing with Better Auth
 
 ---
 
-**Research Completed By**: Claude (Sonnet 4.5)
-**Approval Required**: Confirm technology choices before proceeding to design phase
-**Status**: ✅ Ready for Phase 1 (Data Model & API Contracts)
+**Research Status**: ✅ Complete
+**Key Decisions**: 7 major decisions documented
+**Implementation Ready**: Yes - All patterns researched and validated via Context7

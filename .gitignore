@@ -103,3 +103,38 @@ chatbot-backend/htmlcov/
 chatbot-backend/.mypy_cache/
 chatbot-backend/alembic/versions/*.py
 chatbot-backend/alembic/versions/__pycache__/
+
+# ChatKit-Integrated Chatbot Backend (app/ directory)
+app/__pycache__/
+app/**/__pycache__/
+app/*.pyc
+app/**/*.pyc
+app/.env
+app/.venv/
+app/.venv-app/
+app/venv/
+app/logs
+app/server_debug.log
+app/*.log
+*.db
+*.sqlite3
+
+# Auth Backend
+auth-backend/__pycache__/
+auth-backend/**/__pycache__/
+auth-backend/.env
+auth-backend/.env.local
+auth-backend/node_modules/
+auth-backend/.next/
+
+
+# Temporary files
+COM
+*.mp4
+nul
+*.bak
+
+# Playwright MCP
+.playwright-mcp/
+test-request.json
+tool_example.py

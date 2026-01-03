@@ -1,0 +1,149 @@
+/**
+ * ChatKitWidget Component
+ *
+ * Floating chat widget that can be embedded on any Docusaurus page.
+ * Appears as a button in the bottom-right corner and expands to show chat.
+ * Enhanced with authentication gate - restricts access to authenticated users only.
+ */
+
+import React, { useState, useEffect } from 'react';
+import { RoboticsChatKit } from './RoboticsChatKit';
+import { AuthGate } from './AuthGate';
+import styles from './ChatKitWidget.module.css';
+
+interface ChatKitWidgetProps {
+  position?: 'bottom-right' | 'bottom-left';
+  iconOnly?: boolean;
+}
+
+// Robot icon SVG component
+function RobotIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+    >
+      <path
+        d="M12 2C11.4477 2 11 2.44772 11 3V4H8C6.89543 4 6 4.89543 6 6V8H5C3.89543 8 3 8.89543 3 10V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V10C21 8.89543 20.1046 8 19 8H18V6C18 4.89543 17.1046 4 16 4H13V3C13 2.44772 12.5523 2 12 2ZM8 6H16V8H8V6ZM5 10H19V19H5V10ZM9 12C8.44772 12 8 12.4477 8 13C8 13.5523 8.44772 14 9 14C9.55228 14 10 13.5523 10 13C10 12.4477 9.55228 12 9 12ZM15 12C14.4477 12 14 12.4477 14 13C14 13.5523 14.4477 14 15 14C15.5523 14 16 13.5523 16 13C16 12.4477 15.5523 12 15 12ZM8 16H16V17H8V16Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+export function ChatKitWidget({
+  position = 'bottom-right',
+  iconOnly = true,
+}: ChatKitWidgetProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [currentTheme, setCurrentTheme] = useState<'light' | 'dark'>('light');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Detect theme from document attribute
+  useEffect(() => {
+    const detectTheme = () => {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      setCurrentTheme(isDark ? 'dark' : 'light');
+    };
+
+    // Initial detection
+    detectTheme();
+
+    // Watch for theme changes
+    const observer = new MutationObserver(detectTheme);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  const toggleChat = () => {
+    setIsOpen(!isOpen);
+    if (!isOpen) {
+      setUnreadCount(0);
+    }
+  };
+
+  /**
+   * Handle authentication state changes
+   */
+  const handleAuthStateChange = (authenticated: boolean) => {
+    setIsAuthenticated(authenticated);
+    // Close chat if user logs out
+    if (!authenticated && isOpen) {
+      setIsOpen(false);
+    }
+  };
+
+  const positionClass = position === 'bottom-left' ? styles.bottomLeft : styles.bottomRight;
+
+  return (
+    <div className={`${styles.widgetContainer} ${positionClass}`}>
+      {/* Chat popup */}
+      {isOpen && (
+        <div className={styles.chatPopup}>
+          <div className={styles.chatPopupHeader}>
+            <h3>AI Robotics Assistant</h3>
+            <button
+              className={styles.closeButton}
+              onClick={toggleChat}
+              aria-label="Close chat"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className={styles.chatPopupBody}>
+            <AuthGate
+              loginPageUrl="/login"
+              onAuthStateChange={handleAuthStateChange}
+            >
+              <RoboticsChatKit
+                className={styles.chatkit}
+                theme={currentTheme}
+                enableHistory={true}
+                enablePersistence={true}
+                onResponseEnd={() => {
+                  // Increment unread count if chat is closed
+                  if (!isOpen) {
+                    setUnreadCount((count) => count + 1);
+                  }
+                }}
+              />
+            </AuthGate>
+          </div>
+        </div>
+      )}
+
+      {/* Toggle button */}
+      <button
+        className={styles.toggleButton}
+        onClick={toggleChat}
+        aria-label={isOpen ? 'Close chat' : 'Open chat'}
+      >
+        {isOpen ? (
+          <span className={styles.closeIcon}>✕</span>
+        ) : iconOnly ? (
+          <RobotIcon className={styles.robotIcon} />
+        ) : (
+          <>
+            <RobotIcon className={styles.robotIcon} />
+            <span className={styles.buttonText}>Ask AI</span>
+          </>
+        )}
+        {unreadCount > 0 && !isOpen && (
+          <span className={styles.unreadBadge}>{unreadCount}</span>
+        )}
+      </button>
+    </div>
+  );
+}
+
+export default ChatKitWidget;

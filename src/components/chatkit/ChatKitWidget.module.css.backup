@@ -1,0 +1,503 @@
+/**
+ * ChatKitWidget Styles - Enhanced UI
+ */
+
+.widgetContainer {
+  position: fixed;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.bottomRight {
+  bottom: 24px;
+  right: 24px;
+}
+
+.bottomLeft {
+  bottom: 24px;
+  left: 24px;
+  align-items: flex-start;
+}
+
+.toggleButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 18px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  letter-spacing: 0.3px;
+  overflow: hidden;
+  width: 60px;
+  height: 60px;
+}
+
+.toggleButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.toggleButton:hover::before {
+  opacity: 1;
+}
+
+.toggleButton:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 12px 32px rgba(99, 102, 241, 0.45);
+}
+
+.toggleButton:active {
+  transform: translateY(-1px) scale(0.98);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+}
+
+.robotIcon {
+  width: 28px;
+  height: 28px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.closeIcon {
+  font-size: 22px;
+  font-weight: 400;
+}
+
+.buttonText {
+  font-size: 15px;
+}
+
+/* Button with text variant */
+.toggleButton:has(.buttonText) {
+  border-radius: 50px;
+  padding: 14px 24px;
+  width: auto;
+  height: auto;
+}
+
+.unreadBadge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  min-width: 24px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.5);
+  border: 2px solid white;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.chatPopup {
+  display: flex;
+  flex-direction: column;
+  width: 420px;
+  height: 650px;
+  background: var(--ifm-background-color);
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chatPopupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.chatPopupHeader::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg width="20" height="20" xmlns="http://www.w3.org/2000/svg"><circle cx="2" cy="2" r="1" fill="rgba(255,255,255,0.1)"/></svg>');
+  opacity: 0.3;
+}
+
+.chatPopupHeader h3 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chatPopupHeader h3::before {
+  content: '🤖';
+  font-size: 22px;
+}
+
+.closeButton {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+  font-weight: 300;
+}
+
+.closeButton:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: rotate(90deg) scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.closeButton:active {
+  transform: rotate(90deg) scale(0.95);
+}
+
+.chatPopupBody {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.chatkit {
+  width: 100%;
+  height: 100%;
+}
+
+/* Dark mode - using Docusaurus theme variables */
+[data-theme='dark'] .chatPopup {
+  background: var(--ifm-background-color);
+  border-color: var(--ifm-color-emphasis-200);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme='dark'] .chatPopupHeader {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #c026d3 100%);
+}
+
+[data-theme='dark'] .toggleButton {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #c026d3 100%);
+  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.5);
+}
+
+[data-theme='dark'] .toggleButton:hover {
+  box-shadow: 0 12px 32px rgba(79, 70, 229, 0.6);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .chatPopup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh; /* Dynamic viewport height for mobile browsers */
+    border-radius: 0;
+    animation: slideInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @keyframes slideInUp {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .bottomRight,
+  .bottomLeft {
+    bottom: 20px;
+    right: 20px;
+    left: auto;
+  }
+
+  .toggleButton {
+    padding: 14px 22px;
+    font-size: 15px;
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+  }
+
+  .chatPopupHeader {
+    padding: 18px 20px;
+  }
+
+  .chatPopupHeader h3 {
+    font-size: 18px;
+  }
+}
+
+/* Small Screen Optimization (3-4 inch displays - 320-360px) - T016 */
+
+/* 360px breakpoint */
+@media (max-width: 360px) {
+  .widgetContainer {
+    gap: 12px;
+  }
+
+  /* Widget positioning for small screens */
+  .bottomRight {
+    bottom: 16px;
+    right: 16px;
+  }
+
+  .bottomLeft {
+    bottom: 16px;
+    left: 16px;
+  }
+
+  /* Touch-friendly toggle button - T018 (minimum 44x44px) */
+  .toggleButton {
+    min-width: 50px;
+    min-height: 50px;
+    width: 50px;
+    height: 50px;
+    padding: 0;
+    font-size: 14px;
+    box-shadow: 0 6px 18px rgba(99, 102, 241, 0.4);
+  }
+
+  /* Icon sizing for small button */
+  .robotIcon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .closeIcon {
+    font-size: 20px;
+  }
+
+  /* Button with text - ensure minimum touch target */
+  .toggleButton:has(.buttonText) {
+    min-height: 44px;
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+
+  .buttonText {
+    font-size: 14px;
+  }
+
+  /* Chat popup full screen on small devices */
+  .chatPopup {
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    border-radius: 0;
+  }
+
+  /* Compact header for small screens */
+  .chatPopupHeader {
+    padding: 14px 16px;
+    min-height: 56px; /* Ensure adequate tap area */
+  }
+
+  .chatPopupHeader h3 {
+    font-size: 16px;
+  }
+
+  .chatPopupHeader h3::before {
+    font-size: 18px;
+  }
+
+  /* Close button - minimum 44x44px touch target - T018 */
+  .closeButton {
+    min-width: 44px;
+    min-height: 44px;
+    width: 44px;
+    height: 44px;
+    font-size: 16px;
+    border-radius: 8px; /* Slightly rounded for easier tap */
+  }
+
+  /* Unread badge positioning for smaller button */
+  .unreadBadge {
+    top: -4px;
+    right: -4px;
+    padding: 3px 8px;
+    font-size: 11px;
+    min-width: 20px;
+  }
+}
+
+/* 320px breakpoint - smallest screens */
+@media (max-width: 320px) {
+  .bottomRight,
+  .bottomLeft {
+    bottom: 12px;
+    right: 12px;
+  }
+
+  /* Maintain minimum touch target even on smallest screens */
+  .toggleButton {
+    min-width: 48px;
+    min-height: 48px;
+    width: 48px;
+    height: 48px;
+  }
+
+  .robotIcon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .chatPopupHeader {
+    padding: 12px 14px;
+    min-height: 52px;
+  }
+
+  .chatPopupHeader h3 {
+    font-size: 15px;
+    gap: 8px;
+  }
+
+  .chatPopupHeader h3::before {
+    font-size: 16px;
+  }
+
+  /* Close button must remain 44x44px minimum */
+  .closeButton {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* Portrait orientation - T019 */
+@media (max-width: 360px) and (orientation: portrait) {
+  .chatPopup {
+    /* Optimize for vertical space */
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  .chatPopupHeader {
+    padding: 12px 16px;
+  }
+
+  .bottomRight,
+  .bottomLeft {
+    bottom: 14px;
+  }
+}
+
+/* Landscape orientation - T019 */
+@media (max-height: 360px) and (orientation: landscape) {
+  .chatPopup {
+    /* Full screen in landscape */
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  /* More compact header in landscape */
+  .chatPopupHeader {
+    padding: 10px 14px;
+    min-height: 44px;
+  }
+
+  .chatPopupHeader h3 {
+    font-size: 14px;
+    gap: 6px;
+  }
+
+  .chatPopupHeader h3::before {
+    font-size: 16px;
+  }
+
+  .toggleButton {
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
+    min-height: 46px;
+  }
+
+  .bottomRight,
+  .bottomLeft {
+    bottom: 10px;
+    right: 10px;
+  }
+}
+
+/* Tablet */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .chatPopup {
+    width: 380px;
+    height: 600px;
+  }
+}
+
+/* Extra animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.widgetContainer {
+  animation: fadeIn 0.5s ease-out;
+}

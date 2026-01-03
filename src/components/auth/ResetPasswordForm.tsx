@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
 interface ResetPasswordFormProps {
   token?: string;
@@ -11,11 +12,9 @@ interface FormData {
   confirmPassword: string;
 }
 
-const NEXT_PUBLIC_API_BASE_URL = typeof window !== 'undefined'
-  ? (window as any).env?.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3002'
-  : process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3002'; // Backend runs on port 3002
-
 const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ token: propToken, onSuccess }) => {
+  const { siteConfig } = useDocusaurusContext();
+  const authBaseUrl = (siteConfig.customFields?.authBaseUrl as string) || 'https://auth-backend-mohsin-raza-developers-projects.vercel.app';
   const [token, setToken] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({
     newPassword: '',
@@ -47,7 +46,7 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ token: propToken,
 
   const validateToken = async (tokenStr: string) => {
     try {
-      const response = await axios.get(`${NEXT_PUBLIC_API_BASE_URL}/api/auth/reset-password/validate?token=${tokenStr}`);
+      const response = await axios.get(`${authBaseUrl}/api/auth/reset-password/validate?token=${tokenStr}`);
       setValidToken(response.data.valid);
     } catch (error) {
       setValidToken(false);
@@ -88,7 +87,7 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ token: propToken,
     }
 
     try {
-      const response = await axios.post(`${NEXT_PUBLIC_API_BASE_URL}/api/auth/reset-password/complete`, {
+      const response = await axios.post(`${authBaseUrl}/api/auth/reset-password/complete`, {
         token,
         newPassword: formData.newPassword
       });

@@ -1,609 +1,757 @@
-# Data Model: ChatKit Gemini Backend
+# Data Model Specification
 
-**Feature**: 008-chatkit-gemini-backend
-**Date**: 2025-12-23
-**Database**: Neon PostgreSQL (existing auth database)
-**ORM**: SQLAlchemy 2.0+ (async)
+**Feature**: ChatKit-Integrated Robotics Chatbot Backend
+**Feature ID**: 008-chatkit-gemini-backend
+**Created**: 2025-12-25
+**Status**: Draft
 
 ---
 
 ## Overview
 
-This document defines the database schema for the ChatKit Gemini backend. All tables will be added to the existing Neon PostgreSQL database alongside the auth tables (`users`, `sessions`, `password_resets`). The schema supports conversation threads and messages (text-only chat) with proper referential integrity.
+This document defines the complete data model for the robotics chatbot backend. The system uses **PostgreSQL** (Neon) for persistent storage and implements **ChatKit's Store interface pattern** for conversation management.
 
-**Note**: Attachment functionality has been deferred to a future phase. This MVP focuses on text-based conversations only.
+### Design Principles
+
+1. **Text-Only Architecture**: No file/attachment storage (permanently out of scope)
+2. **Session-Based Auth**: User identity derived from Better Auth sessions (read-only)
+3. **Conversation-Centric**: Threads and messages are the core domain entities
+4. **Audit Trail**: All entities include creation and update timestamps
+5. **Soft Deletes**: Deleted threads cascade to messages (hard delete)
 
 ---
 
 ## Entity Relationship Diagram
 
 ```
-┌─────────────────┐
-│     users       │  (existing auth table)
-│─────────────────│
-│ id (UUID) PK    │
-│ email           │
-│ first_name      │
-│ last_name       │
-│ software_level  │
-│ created_at      │
-└────────┬────────┘
-         │
-         │ 1:N
-         │
-         ↓
-┌─────────────────┐
-│    threads      │
-│─────────────────│
-│ thread_id (UUID) PK
-│ user_id (UUID) FK
-│ title (VARCHAR)
-│ created_at
-│ updated_at
-└────────┬─────────────┘
-         │
-         │ 1:N
-         │
-         ↓
-┌─────────────────┐
-│    messages     │
-│─────────────────│
-│ message_id (UUID) PK
-│ thread_id (UUID) FK
-│ role (ENUM)
-│ content (TEXT)
-│ created_at
-│ sequence_number (INT)
-└─────────────────┘
+┌─────────────────────────┐
+│ User (Better Auth)      │
+│ ─────────────────────── │
+│ • id (PK)               │
+│ • email                 │
+│ • name                  │
+│ • software_level        │
+│ • hardware_access       │
+└───────┬─────────────────┘
+        │ 1
+        │ owns
+        │ N
+┌───────▼─────────────────┐
+│ Thread                  │
+│ ─────────────────────── │
+│ • thread_id (PK)        │
+│ • user_id (FK)          │
+│ • title                 │
+│ • metadata (JSONB)      │
+│ • created_at            │
+│ • updated_at            │
+└───────┬─────────────────┘
+        │ 1
+        │ contains
+        │ N
+┌───────▼─────────────────┐
+│ Message                 │
+│ ─────────────────────── │
+│ • message_id (PK)       │
+│ • thread_id (FK)        │
+│ • role                  │
+│ • content               │
+│ • sequence_number       │
+│ • created_at            │
+└─────────────────────────┘
 ```
 
 ---
 
-## Table Definitions
+## Entity Definitions
 
-### 1. threads
+### 1. Thread
 
-Stores conversation threads owned by users.
+**Purpose**: Represents a conversation thread between a user and the chatbot.
 
-**Columns**:
+**Table Name**: `threads`
 
-| Column       | Type                | Constraints                           | Description                                    |
-|--------------|---------------------|---------------------------------------|------------------------------------------------|
-| thread_id    | UUID                | PRIMARY KEY, DEFAULT gen_random_uuid() | Unique identifier for the thread               |
-| user_id      | UUID                | NOT NULL, FOREIGN KEY → users(id) ON DELETE CASCADE | Owner of the thread                            |
-| title        | VARCHAR(255)        | NULL                                  | Thread title (auto-generated or user-provided) |
-| created_at   | TIMESTAMP WITH TIME ZONE | NOT NULL, DEFAULT NOW()               | Thread creation timestamp                      |
-| updated_at   | TIMESTAMP WITH TIME ZONE | NOT NULL, DEFAULT NOW()               | Last activity timestamp (updated on new messages) |
+**Attributes**:
+
+| Column        | Type                  | Constraints                     | Description                                      |
+|---------------|----------------------|--------------------------------|--------------------------------------------------|
+| thread_id     | UUID                 | PRIMARY KEY, NOT NULL          | Unique thread identifier                         |
+| user_id       | UUID                 | NOT NULL, FOREIGN KEY (users)  | Owner of the thread (Better Auth user)           |
+| title         | VARCHAR(255)         | NULLABLE                       | Optional thread title (auto-generated or user-set) |
+| metadata      | JSONB                | NOT NULL, DEFAULT '{}'         | ChatKit metadata (tags, custom fields)           |
+| created_at    | TIMESTAMP WITH TIME ZONE | NOT NULL, DEFAULT NOW()    | Thread creation timestamp                        |
+| updated_at    | TIMESTAMP WITH TIME ZONE | NOT NULL, DEFAULT NOW()    | Last message timestamp (auto-updated)            |
 
 **Indexes**:
 - `idx_threads_user_id` on `user_id` (for listing user's threads)
-- `idx_threads_created_at` on `created_at DESC` (for sorting by recency)
+- `idx_threads_updated_at` on `updated_at DESC` (for sorting by recent activity)
+- `idx_threads_created_at` on `created_at DESC` (for pagination)
 
-**SQL**:
-```sql
-CREATE TABLE threads (
-    thread_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    title VARCHAR(255),
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX idx_threads_user_id ON threads(user_id);
-CREATE INDEX idx_threads_created_at ON threads(created_at DESC);
-```
+**Foreign Keys**:
+- `user_id` REFERENCES `user(id)` ON DELETE CASCADE
 
 **Validation Rules**:
-- `title` max length: 255 characters
-- `user_id` must exist in `users` table
-- `updated_at` must be >= `created_at`
+- `thread_id` must be a valid UUIDv4
+- `user_id` must exist in Better Auth's `user` table
+- `title` length: 0-255 characters (NULL allowed)
+- `metadata` must be valid JSON object (not array or primitive)
+- `created_at` must be <= `updated_at`
 
 **State Transitions**:
-- Created → Active (on first message)
-- Active → Active (on new messages, update `updated_at`)
-- Active → Deleted (cascade delete messages/attachments)
+- **Created**: New thread with no messages
+- **Active**: Thread with >= 1 message
+- **Updated**: `updated_at` changes when new message added
+- **Deleted**: Hard delete with CASCADE to messages
+
+**Business Rules**:
+1. Users can only access threads they own (`user_id` match)
+2. Thread title auto-generated from first user message if NULL
+3. `updated_at` automatically updated when messages are added
+4. Threads with zero messages can exist (user opened thread, didn't send message yet)
+
+**ChatKit Mapping**:
+```python
+from chatkit.models import ThreadMetadata
+
+# Thread → ThreadMetadata
+thread_metadata = ThreadMetadata(
+    id=thread.thread_id,
+    created_at=thread.created_at.isoformat(),
+    updated_at=thread.updated_at.isoformat(),
+    metadata={
+        "title": thread.title,
+        **thread.metadata  # JSONB column
+    }
+)
+```
 
 ---
 
-### 2. messages
+### 2. Message
 
-Stores individual messages within threads (user and assistant messages).
+**Purpose**: Represents a single message within a conversation thread (user or assistant).
 
-**Columns**:
+**Table Name**: `messages`
 
-| Column          | Type                | Constraints                           | Description                                    |
-|-----------------|---------------------|---------------------------------------|------------------------------------------------|
-| message_id      | UUID                | PRIMARY KEY, DEFAULT gen_random_uuid() | Unique identifier for the message              |
-| thread_id       | UUID                | NOT NULL, FOREIGN KEY → threads(thread_id) ON DELETE CASCADE | Parent thread                                  |
-| role            | VARCHAR(20)         | NOT NULL, CHECK (role IN ('user', 'assistant')) | Message author (user or AI assistant)          |
-| content         | TEXT                | NOT NULL                              | Message content (plain text or markdown)       |
-| created_at      | TIMESTAMP WITH TIME ZONE | NOT NULL, DEFAULT NOW()               | Message creation timestamp                     |
-| sequence_number | INTEGER             | NOT NULL                              | Order of message in thread (1, 2, 3, ...)      |
+**Attributes**:
+
+| Column          | Type                     | Constraints                     | Description                                      |
+|-----------------|-------------------------|---------------------------------|--------------------------------------------------|
+| message_id      | UUID                    | PRIMARY KEY, NOT NULL           | Unique message identifier                        |
+| thread_id       | UUID                    | NOT NULL, FOREIGN KEY (threads) | Parent thread                                    |
+| role            | VARCHAR(20)             | NOT NULL, CHECK IN ('user', 'assistant') | Message sender role                              |
+| content         | TEXT                    | NOT NULL                        | Message text content                             |
+| sequence_number | INTEGER                 | NOT NULL                        | Message order within thread (1-indexed)          |
+| created_at      | TIMESTAMP WITH TIME ZONE | NOT NULL, DEFAULT NOW()        | Message creation timestamp                       |
 
 **Indexes**:
 - `idx_messages_thread_id` on `thread_id` (for retrieving thread messages)
-- `idx_messages_created_at` on `created_at` (for chronological ordering)
-- `idx_messages_sequence` on `(thread_id, sequence_number)` UNIQUE (enforce order)
+- `idx_messages_sequence` on `(thread_id, sequence_number)` (UNIQUE, for ordering)
+- `idx_messages_created_at` on `created_at` (for temporal queries)
 
-**SQL**:
+**Foreign Keys**:
+- `thread_id` REFERENCES `threads(thread_id)` ON DELETE CASCADE
+
+**Validation Rules**:
+- `message_id` must be a valid UUIDv4
+- `thread_id` must exist in `threads` table
+- `role` must be exactly 'user' or 'assistant' (case-sensitive)
+- `content` must not be empty string (length >= 1)
+- `content` maximum length: 100,000 characters (safety limit)
+- `sequence_number` must be >= 1
+- `sequence_number` must be unique per thread (enforced by unique index)
+
+**State Transitions**:
+- **Created**: New message added to thread
+- **Immutable**: Messages are never updated (append-only log)
+- **Deleted**: Hard delete via CASCADE when thread deleted
+
+**Business Rules**:
+1. Messages are **append-only** (no updates after creation)
+2. `sequence_number` auto-increments per thread (1, 2, 3, ...)
+3. First message in thread sets thread's `updated_at`
+4. Messages alternate between 'user' and 'assistant' roles (best practice, not enforced)
+5. Text-only content (no file references or attachments)
+
+**ChatKit Mapping**:
+```python
+from chatkit.models import ThreadItem, UserMessageItem, AssistantMessageItem
+
+# Message → ThreadItem
+if message.role == 'user':
+    item = UserMessageItem(
+        id=message.message_id,
+        thread_id=message.thread_id,
+        created_at=message.created_at.isoformat(),
+        text=message.content
+    )
+elif message.role == 'assistant':
+    item = AssistantMessageItem(
+        id=message.message_id,
+        thread_id=message.thread_id,
+        created_at=message.created_at.isoformat(),
+        text=message.content
+    )
+```
+
+---
+
+### 3. User (Read-Only)
+
+**Purpose**: User accounts managed by Better Auth (referenced for foreign keys only).
+
+**Table Name**: `user` (Better Auth managed)
+
+**Attributes**:
+
+| Column           | Type         | Constraints       | Description                                      |
+|------------------|-------------|-------------------|--------------------------------------------------|
+| id               | UUID        | PRIMARY KEY       | Unique user identifier                           |
+| email            | VARCHAR(255) | NOT NULL, UNIQUE  | User's email address                             |
+| name             | VARCHAR(255) | NULLABLE          | User's display name                              |
+| software_level   | VARCHAR(50)  | NULLABLE          | User's software skill level (Beginner/Intermediate/Advanced) |
+| hardware_access  | VARCHAR(50)  | NULLABLE          | User's hardware access (Laptop/Cloud or Physical Robot) |
+
+**Note**: This table is **read-only** for the chatbot backend. All user management is handled by Better Auth.
+
+**Relationships**:
+- One user → Many threads (1:N)
+
+**Usage in Backend**:
+- `user_id` extracted from Better Auth session validation
+- User details (name, software_level) MAY be used for personalized responses (future enhancement)
+- No direct writes to this table from chatbot backend
+
+---
+
+## Database Schema (SQL DDL)
+
+### Table Creation
+
 ```sql
+-- ============================================
+-- Extension Requirements
+-- ============================================
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- ============================================
+-- Threads Table
+-- ============================================
+CREATE TABLE threads (
+    thread_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+    title VARCHAR(255),
+    metadata JSONB NOT NULL DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+
+    -- Constraints
+    CONSTRAINT chk_threads_timestamps CHECK (created_at <= updated_at),
+    CONSTRAINT chk_threads_metadata_object CHECK (jsonb_typeof(metadata) = 'object')
+);
+
+-- Indexes for threads
+CREATE INDEX idx_threads_user_id ON threads(user_id);
+CREATE INDEX idx_threads_updated_at ON threads(updated_at DESC);
+CREATE INDEX idx_threads_created_at ON threads(created_at DESC);
+
+-- Trigger to auto-update updated_at
+CREATE OR REPLACE FUNCTION update_thread_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_threads_updated_at
+BEFORE UPDATE ON threads
+FOR EACH ROW
+EXECUTE FUNCTION update_thread_timestamp();
+
+-- ============================================
+-- Messages Table
+-- ============================================
 CREATE TABLE messages (
-    message_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    message_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     thread_id UUID NOT NULL REFERENCES threads(thread_id) ON DELETE CASCADE,
     role VARCHAR(20) NOT NULL CHECK (role IN ('user', 'assistant')),
-    content TEXT NOT NULL,
+    content TEXT NOT NULL CHECK (LENGTH(content) > 0 AND LENGTH(content) <= 100000),
+    sequence_number INTEGER NOT NULL CHECK (sequence_number >= 1),
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    sequence_number INTEGER NOT NULL,
-    UNIQUE (thread_id, sequence_number)
+
+    -- Unique constraint for sequence numbering per thread
+    CONSTRAINT uq_messages_thread_sequence UNIQUE (thread_id, sequence_number)
 );
 
+-- Indexes for messages
 CREATE INDEX idx_messages_thread_id ON messages(thread_id);
 CREATE INDEX idx_messages_created_at ON messages(created_at);
-CREATE INDEX idx_messages_sequence ON messages(thread_id, sequence_number);
+
+-- Trigger to update thread's updated_at when message added
+CREATE OR REPLACE FUNCTION update_thread_on_message()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE threads
+    SET updated_at = NEW.created_at
+    WHERE thread_id = NEW.thread_id;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_messages_update_thread
+AFTER INSERT ON messages
+FOR EACH ROW
+EXECUTE FUNCTION update_thread_on_message();
 ```
 
-**Validation Rules**:
-- `content` max length: 10,000 characters (application-level check)
-- `role` must be either 'user' or 'assistant'
-- `sequence_number` must be unique per thread and sequential (1-based)
-- Thread must exist
+### Sample Queries
 
-**Sequence Number Logic**:
-```python
-# Get next sequence number
-next_seq = (
-    await session.execute(
-        select(func.max(Message.sequence_number))
-        .where(Message.thread_id == thread_id)
-    )
-).scalar() or 0
-new_seq = next_seq + 1
-```
-
----
-
-### 3. attachments
-
-Stores metadata for files attached to messages.
-
-**Columns**:
-
-| Column         | Type                | Constraints                           | Description                                    |
-|----------------|---------------------|---------------------------------------|------------------------------------------------|
-| attachment_id  | UUID                | PRIMARY KEY, DEFAULT gen_random_uuid() | Unique identifier for the attachment           |
-| message_id     | UUID                | NOT NULL, FOREIGN KEY → messages(message_id) ON DELETE CASCADE | Parent message                                 |
-| file_name      | VARCHAR(255)        | NOT NULL                              | Original filename (e.g., "code.py")            |
-| file_type      | VARCHAR(100)        | NULL                                  | MIME type (e.g., "text/plain", "image/png")   |
-| file_size      | BIGINT              | NOT NULL                              | File size in bytes                             |
-| storage_url    | TEXT                | NOT NULL                              | R2 storage URL (internal, not signed)          |
-| created_at     | TIMESTAMP WITH TIME ZONE | NOT NULL, DEFAULT NOW()               | Upload timestamp                               |
-
-**Indexes**:
-- `idx_attachments_message_id` on `message_id` (for retrieving message attachments)
-
-**SQL**:
+**Create New Thread**:
 ```sql
-CREATE TABLE attachments (
-    attachment_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    message_id UUID NOT NULL REFERENCES messages(message_id) ON DELETE CASCADE,
-    file_name VARCHAR(255) NOT NULL,
-    file_type VARCHAR(100),
-    file_size BIGINT NOT NULL,
-    storage_url TEXT NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX idx_attachments_message_id ON attachments(message_id);
-```
-
-**Validation Rules**:
-- `file_name` max length: 255 characters
-- `file_size` max: 10MB (10,485,760 bytes)
-- `file_type` whitelist (application-level):
-  - Text: `text/plain`, `text/markdown`
-  - Code: `text/x-python`, `text/x-c++src`
-  - Images: `image/png`, `image/jpeg`
-  - Documents: `application/pdf`
-- `storage_url` format: `s3://chatbot-attachments/{user_id}/{thread_id}/{attachment_id}`
-
-**Retention Policy**:
-- Attachments are deleted when parent thread is deleted (CASCADE)
-- Lifecycle: Upload → Active → Deleted (with thread)
-
----
-
-## SQLAlchemy Models
-
-### Base Configuration
-
-```python
-from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy import Column, String, Integer, BigInteger, Text, ForeignKey, TIMESTAMP, CheckConstraint
-from sqlalchemy.dialects.postgresql import UUID
-import uuid
-from datetime import datetime, timezone
-
-# Async engine
-engine = create_async_engine(
-    os.environ["DATABASE_URL"],
-    echo=True,  # Set to False in production
-    pool_size=20,
-    max_overflow=10
+INSERT INTO threads (thread_id, user_id, title, metadata)
+VALUES (
+    uuid_generate_v4(),
+    'a1b2c3d4-e5f6-7890-1234-567890abcdef',  -- user_id from Better Auth
+    NULL,  -- Auto-generated later
+    '{"tags": ["robotics", "kinematics"]}'::jsonb
 )
-
-async_session = async_sessionmaker(engine, expire_on_commit=False)
-
-class Base(AsyncAttrs, DeclarativeBase):
-    pass
+RETURNING thread_id, created_at;
 ```
 
-### Thread Model
-
-```python
-from sqlalchemy.orm import relationship
-
-class Thread(Base):
-    __tablename__ = "threads"
-
-    thread_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    title = Column(String(255), nullable=True)
-    created_at = Column(TIMESTAMP(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(TIMESTAMP(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
-
-    # Relationships
-    messages = relationship("Message", back_populates="thread", cascade="all, delete-orphan")
-    user = relationship("User", foreign_keys=[user_id])  # Assuming User model exists
-
-    def __repr__(self):
-        return f"<Thread(thread_id={self.thread_id}, title={self.title})>"
+**Add Message to Thread**:
+```sql
+-- Get next sequence number
+WITH next_seq AS (
+    SELECT COALESCE(MAX(sequence_number), 0) + 1 AS seq
+    FROM messages
+    WHERE thread_id = 'thread-uuid-here'
+)
+INSERT INTO messages (message_id, thread_id, role, content, sequence_number)
+SELECT
+    uuid_generate_v4(),
+    'thread-uuid-here',
+    'user',
+    'Explain inverse kinematics in robotics',
+    seq
+FROM next_seq
+RETURNING message_id, sequence_number;
 ```
 
-### Message Model
-
-```python
-class Message(Base):
-    __tablename__ = "messages"
-    __table_args__ = (
-        CheckConstraint("role IN ('user', 'assistant')", name="check_role"),
-    )
-
-    message_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    thread_id = Column(UUID(as_uuid=True), ForeignKey("threads.thread_id", ondelete="CASCADE"), nullable=False)
-    role = Column(String(20), nullable=False)
-    content = Column(Text, nullable=False)
-    created_at = Column(TIMESTAMP(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
-    sequence_number = Column(Integer, nullable=False)
-
-    # Relationships
-    thread = relationship("Thread", back_populates="messages")
-    attachments = relationship("Attachment", back_populates="message", cascade="all, delete-orphan")
-
-    def __repr__(self):
-        return f"<Message(message_id={self.message_id}, role={self.role}, seq={self.sequence_number})>"
+**Load Thread with Last 10 Messages**:
+```sql
+SELECT
+    t.thread_id,
+    t.title,
+    t.metadata,
+    t.created_at AS thread_created_at,
+    t.updated_at AS thread_updated_at,
+    json_agg(
+        json_build_object(
+            'message_id', m.message_id,
+            'role', m.role,
+            'content', m.content,
+            'sequence_number', m.sequence_number,
+            'created_at', m.created_at
+        ) ORDER BY m.sequence_number DESC
+    ) FILTER (WHERE m.message_id IS NOT NULL) AS messages
+FROM threads t
+LEFT JOIN LATERAL (
+    SELECT * FROM messages
+    WHERE thread_id = t.thread_id
+    ORDER BY sequence_number DESC
+    LIMIT 10
+) m ON true
+WHERE t.thread_id = 'thread-uuid-here'
+  AND t.user_id = 'user-uuid-here'  -- Authorization check
+GROUP BY t.thread_id;
 ```
 
-### Attachment Model
+**List User's Threads (Paginated)**:
+```sql
+SELECT
+    thread_id,
+    title,
+    metadata,
+    created_at,
+    updated_at,
+    (SELECT COUNT(*) FROM messages WHERE thread_id = threads.thread_id) AS message_count
+FROM threads
+WHERE user_id = 'user-uuid-here'
+ORDER BY updated_at DESC
+LIMIT 20 OFFSET 0;  -- First page
+```
 
-```python
-class Attachment(Base):
-    __tablename__ = "attachments"
-
-    attachment_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    message_id = Column(UUID(as_uuid=True), ForeignKey("messages.message_id", ondelete="CASCADE"), nullable=False)
-    file_name = Column(String(255), nullable=False)
-    file_type = Column(String(100), nullable=True)
-    file_size = Column(BigInteger, nullable=False)
-    storage_url = Column(Text, nullable=False)
-    created_at = Column(TIMESTAMP(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
-
-    # Relationships
-    message = relationship("Message", back_populates="attachments")
-
-    def __repr__(self):
-        return f"<Attachment(attachment_id={self.attachment_id}, file_name={self.file_name})>"
+**Delete Thread (Cascades to Messages)**:
+```sql
+DELETE FROM threads
+WHERE thread_id = 'thread-uuid-here'
+  AND user_id = 'user-uuid-here';  -- Authorization check
+-- CASCADE automatically deletes all messages
 ```
 
 ---
 
-## Pydantic Schemas (Request/Response Models)
+## Data Validation Rules
 
-### Thread Schemas
+### Thread Validation
 
+**At Application Layer** (Python/SQLAlchemy):
 ```python
-from pydantic import BaseModel, Field
-from datetime import datetime
 from uuid import UUID
-from typing import Optional
+from datetime import datetime
+from pydantic import BaseModel, Field, validator
 
 class ThreadCreate(BaseModel):
-    title: Optional[str] = Field(None, max_length=255)
-
-class ThreadResponse(BaseModel):
-    thread_id: UUID
     user_id: UUID
-    title: Optional[str]
-    created_at: datetime
-    updated_at: datetime
+    title: str | None = Field(None, max_length=255)
+    metadata: dict = Field(default_factory=dict)
 
-    model_config = {"from_attributes": True}
+    @validator('title')
+    def validate_title(cls, v):
+        if v is not None and len(v.strip()) == 0:
+            return None  # Treat empty strings as NULL
+        return v
 
-class ThreadListResponse(BaseModel):
-    threads: list[ThreadResponse]
-    total: int
+    @validator('metadata')
+    def validate_metadata(cls, v):
+        if not isinstance(v, dict):
+            raise ValueError("Metadata must be a dictionary")
+        return v
+
+class ThreadUpdate(BaseModel):
+    title: str | None = Field(None, max_length=255)
+    metadata: dict | None = None
 ```
 
-### Message Schemas
+### Message Validation
 
+**At Application Layer**:
 ```python
 class MessageCreate(BaseModel):
-    content: str = Field(..., min_length=1, max_length=10000)
-    attachment_ids: Optional[list[UUID]] = None
+    thread_id: UUID
+    role: Literal['user', 'assistant']
+    content: str = Field(..., min_length=1, max_length=100000)
+
+    @validator('content')
+    def validate_content(cls, v):
+        if not v.strip():
+            raise ValueError("Content cannot be empty or whitespace-only")
+        return v
 
 class MessageResponse(BaseModel):
     message_id: UUID
     thread_id: UUID
     role: str
     content: str
-    created_at: datetime
     sequence_number: int
-    attachments: list["AttachmentResponse"] = []
-
-    model_config = {"from_attributes": True}
-
-class MessageListResponse(BaseModel):
-    messages: list[MessageResponse]
-    total: int
-```
-
-### Attachment Schemas
-
-```python
-class AttachmentUploadRequest(BaseModel):
-    file_name: str = Field(..., max_length=255)
-    file_type: str = Field(..., max_length=100)
-    file_size: int = Field(..., gt=0, le=10485760)  # Max 10MB
-
-class AttachmentUploadResponse(BaseModel):
-    attachment_id: UUID
-    upload_url: str  # Signed R2 URL
-    expires_in: int  # Seconds
-
-class AttachmentResponse(BaseModel):
-    attachment_id: UUID
-    message_id: UUID
-    file_name: str
-    file_type: Optional[str]
-    file_size: int
-    download_url: Optional[str]  # Signed URL (generated on-demand)
     created_at: datetime
-
-    model_config = {"from_attributes": True}
-```
-
----
-
-## Database Migrations (Alembic)
-
-### Initial Migration
-
-```python
-# alembic/versions/001_create_chatbot_tables.py
-from alembic import op
-import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
-
-def upgrade():
-    # Create threads table
-    op.create_table(
-        'threads',
-        sa.Column('thread_id', postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text('gen_random_uuid()')),
-        sa.Column('user_id', postgresql.UUID(as_uuid=True), sa.ForeignKey('users.id', ondelete='CASCADE'), nullable=False),
-        sa.Column('title', sa.String(255), nullable=True),
-        sa.Column('created_at', sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.text('NOW()')),
-        sa.Column('updated_at', sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.text('NOW()'))
-    )
-    op.create_index('idx_threads_user_id', 'threads', ['user_id'])
-    op.create_index('idx_threads_created_at', 'threads', ['created_at'], postgresql_ops={'created_at': 'DESC'})
-
-    # Create messages table
-    op.create_table(
-        'messages',
-        sa.Column('message_id', postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text('gen_random_uuid()')),
-        sa.Column('thread_id', postgresql.UUID(as_uuid=True), sa.ForeignKey('threads.thread_id', ondelete='CASCADE'), nullable=False),
-        sa.Column('role', sa.String(20), nullable=False),
-        sa.Column('content', sa.Text, nullable=False),
-        sa.Column('created_at', sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.text('NOW()')),
-        sa.Column('sequence_number', sa.Integer, nullable=False),
-        sa.CheckConstraint("role IN ('user', 'assistant')", name='check_role'),
-        sa.UniqueConstraint('thread_id', 'sequence_number', name='uq_thread_sequence')
-    )
-    op.create_index('idx_messages_thread_id', 'messages', ['thread_id'])
-    op.create_index('idx_messages_created_at', 'messages', ['created_at'])
-    op.create_index('idx_messages_sequence', 'messages', ['thread_id', 'sequence_number'])
-
-    # Create attachments table
-    op.create_table(
-        'attachments',
-        sa.Column('attachment_id', postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text('gen_random_uuid()')),
-        sa.Column('message_id', postgresql.UUID(as_uuid=True), sa.ForeignKey('messages.message_id', ondelete='CASCADE'), nullable=False),
-        sa.Column('file_name', sa.String(255), nullable=False),
-        sa.Column('file_type', sa.String(100), nullable=True),
-        sa.Column('file_size', sa.BigInteger, nullable=False),
-        sa.Column('storage_url', sa.Text, nullable=False),
-        sa.Column('created_at', sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.text('NOW()'))
-    )
-    op.create_index('idx_attachments_message_id', 'attachments', ['message_id'])
-
-def downgrade():
-    op.drop_table('attachments')
-    op.drop_table('messages')
-    op.drop_table('threads')
-```
-
----
-
-## Query Patterns
-
-### Common Queries
-
-#### 1. List User's Threads (Most Recent First)
-
-```python
-from sqlalchemy import select
-from sqlalchemy.orm import selectinload
-
-async def get_user_threads(user_id: UUID, limit: int = 20, offset: int = 0):
-    async with async_session() as session:
-        stmt = (
-            select(Thread)
-            .where(Thread.user_id == user_id)
-            .order_by(Thread.updated_at.desc())
-            .limit(limit)
-            .offset(offset)
-        )
-        result = await session.execute(stmt)
-        threads = result.scalars().all()
-        return threads
-```
-
-#### 2. Get Thread with Messages (Eager Loading)
-
-```python
-async def get_thread_with_messages(thread_id: UUID):
-    async with async_session() as session:
-        stmt = (
-            select(Thread)
-            .where(Thread.thread_id == thread_id)
-            .options(
-                selectinload(Thread.messages).selectinload(Message.attachments)
-            )
-        )
-        result = await session.execute(stmt)
-        thread = result.scalar_one_or_none()
-        return thread
-```
-
-#### 3. Create Message with Auto-Sequence
-
-```python
-from sqlalchemy import func
-
-async def create_message(thread_id: UUID, role: str, content: str):
-    async with async_session() as session:
-        # Get next sequence number
-        next_seq_stmt = select(func.max(Message.sequence_number)).where(Message.thread_id == thread_id)
-        max_seq = (await session.execute(next_seq_stmt)).scalar() or 0
-
-        # Create message
-        message = Message(
-            thread_id=thread_id,
-            role=role,
-            content=content,
-            sequence_number=max_seq + 1
-        )
-        session.add(message)
-
-        # Update thread's updated_at
-        thread_stmt = select(Thread).where(Thread.thread_id == thread_id)
-        thread = (await session.execute(thread_stmt)).scalar_one()
-        thread.updated_at = datetime.now(timezone.utc)
-
-        await session.commit()
-        await session.refresh(message)
-        return message
-```
-
-#### 4. Delete Thread (Cascade Delete Messages/Attachments)
-
-```python
-async def delete_thread(thread_id: UUID, user_id: UUID):
-    async with async_session() as session:
-        stmt = select(Thread).where(
-            Thread.thread_id == thread_id,
-            Thread.user_id == user_id  # Ensure ownership
-        )
-        thread = (await session.execute(stmt)).scalar_one_or_none()
-
-        if not thread:
-            raise HTTPException(status_code=404, detail="Thread not found")
-
-        await session.delete(thread)  # CASCADE deletes messages and attachments
-        await session.commit()
 ```
 
 ---
 
 ## Performance Considerations
 
-### Connection Pooling
+### Indexing Strategy
 
-```python
-# Recommended settings for Railway/Render
-engine = create_async_engine(
-    DATABASE_URL,
-    pool_size=10,           # Max persistent connections
-    max_overflow=5,          # Additional connections under load
-    pool_recycle=3600,       # Recycle connections every hour
-    pool_pre_ping=True       # Verify connection before use
-)
-```
+1. **Thread Lookups by User**:
+   - `idx_threads_user_id` enables fast `WHERE user_id = ?` queries
+   - Expected performance: < 10ms for 10K threads per user
+
+2. **Recent Threads Sorting**:
+   - `idx_threads_updated_at` DESC enables fast sorting
+   - Used for "Recent Conversations" view
+
+3. **Message Retrieval**:
+   - `idx_messages_thread_id` + `uq_messages_thread_sequence` enable fast ordered retrieval
+   - Expected performance: < 20ms for 50-message threads
+
+4. **Pagination**:
+   - `idx_threads_created_at` supports offset-based pagination
+   - For very large datasets (10K+ threads), consider cursor-based pagination
 
 ### Query Optimization
 
-1. **Use Indexes**: All foreign keys are indexed
-2. **Eager Loading**: Use `selectinload()` to avoid N+1 queries
-3. **Pagination**: Always use `LIMIT`/`OFFSET` for list endpoints
-4. **Partial Loading**: Use `defer()` for large TEXT columns when not needed
+**N+1 Query Prevention**:
+```python
+# BAD: N+1 queries
+threads = db.query(Thread).filter_by(user_id=user_id).all()
+for thread in threads:
+    messages = db.query(Message).filter_by(thread_id=thread.thread_id).all()  # N queries
 
-### Estimated Data Growth
+# GOOD: Single query with JOIN
+threads_with_messages = (
+    db.query(Thread)
+    .outerjoin(Message, Message.thread_id == Thread.thread_id)
+    .filter(Thread.user_id == user_id)
+    .options(joinedload(Thread.messages))
+    .all()
+)
+```
 
-| Table       | Rows/Month (100 users) | Storage Impact    |
-|-------------|-------------------------|-------------------|
-| threads     | ~2,000                  | Minimal (<1MB)    |
-| messages    | ~40,000                 | Moderate (~50MB)  |
-| attachments | ~500                    | Links only (<1MB) |
+**Message Window Loading** (Last 10 Messages):
+```python
+from sqlalchemy import func
 
-**Total DB Growth**: ~51MB/month (Neon Free Tier: 3GB)
+# Efficient subquery for last N messages
+last_10_messages = (
+    db.query(Message)
+    .filter(Message.thread_id == thread_id)
+    .order_by(Message.sequence_number.desc())
+    .limit(10)
+    .subquery()
+)
+
+messages = db.query(last_10_messages).order_by(last_10_messages.c.sequence_number.asc()).all()
+```
+
+### Connection Pooling
+
+**Recommended Settings** (asyncpg):
+```python
+from sqlalchemy.ext.asyncio import create_async_engine
+
+engine = create_async_engine(
+    DATABASE_URL,
+    pool_size=20,          # 20 connections per instance
+    max_overflow=10,       # +10 overflow connections
+    pool_timeout=30,       # 30s wait for connection
+    pool_recycle=3600,     # Recycle connections after 1 hour
+    pool_pre_ping=True,    # Verify connection health before use
+)
+```
+
+---
+
+## Security Considerations
+
+### Row-Level Authorization
+
+**Thread Access**:
+```python
+async def get_thread_by_id(thread_id: UUID, user_id: UUID) -> Thread:
+    """Retrieve thread with authorization check."""
+    thread = await db.query(Thread).filter(
+        Thread.thread_id == thread_id,
+        Thread.user_id == user_id  # Critical: user can only access own threads
+    ).first()
+
+    if not thread:
+        raise HTTPException(status_code=404, detail="Thread not found")
+
+    return thread
+```
+
+**Message Access**:
+```python
+async def get_messages_by_thread(thread_id: UUID, user_id: UUID) -> list[Message]:
+    """Retrieve messages with ownership validation."""
+    # First verify thread ownership
+    thread = await get_thread_by_id(thread_id, user_id)
+
+    # Then retrieve messages (already authorized via thread check)
+    messages = await db.query(Message).filter(
+        Message.thread_id == thread_id
+    ).order_by(Message.sequence_number.asc()).all()
+
+    return messages
+```
+
+### Input Sanitization
+
+**SQL Injection Prevention**:
+- ✅ Use SQLAlchemy ORM with parameterized queries (automatic)
+- ✅ Never construct raw SQL with user input
+- ✅ Validate UUIDs before querying
+
+**Content Validation**:
+```python
+import bleach
+
+def sanitize_message_content(content: str) -> str:
+    """Remove potentially harmful content while preserving formatting."""
+    # For text-only chatbot, we primarily validate length and non-empty
+    # No HTML/XSS risk since content is not rendered as HTML
+    if not content or len(content.strip()) == 0:
+        raise ValueError("Content cannot be empty")
+
+    if len(content) > 100000:
+        raise ValueError("Content exceeds maximum length (100K characters)")
+
+    return content.strip()
+```
+
+---
+
+## Migration Strategy
+
+### Initial Schema Deployment
+
+**Using Alembic** (recommended):
+```bash
+# Initialize Alembic
+alembic init alembic
+
+# Create initial migration
+alembic revision --autogenerate -m "Initial schema: threads and messages"
+
+# Apply migration
+alembic upgrade head
+```
+
+**Alembic Migration File** (`versions/001_initial_schema.py`):
+```python
+from alembic import op
+import sqlalchemy as sa
+from sqlalchemy.dialects.postgresql import UUID, JSONB
+
+def upgrade():
+    # Create threads table
+    op.create_table(
+        'threads',
+        sa.Column('thread_id', UUID(as_uuid=True), primary_key=True, server_default=sa.text('uuid_generate_v4()')),
+        sa.Column('user_id', UUID(as_uuid=True), nullable=False),
+        sa.Column('title', sa.String(255), nullable=True),
+        sa.Column('metadata', JSONB, nullable=False, server_default='{}'),
+        sa.Column('created_at', sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.Column('updated_at', sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.ForeignKeyConstraint(['user_id'], ['user.id'], ondelete='CASCADE'),
+        sa.CheckConstraint('created_at <= updated_at', name='chk_threads_timestamps'),
+    )
+
+    # Create indexes
+    op.create_index('idx_threads_user_id', 'threads', ['user_id'])
+    op.create_index('idx_threads_updated_at', 'threads', [sa.desc('updated_at')])
+
+    # Create messages table
+    op.create_table(
+        'messages',
+        sa.Column('message_id', UUID(as_uuid=True), primary_key=True, server_default=sa.text('uuid_generate_v4()')),
+        sa.Column('thread_id', UUID(as_uuid=True), nullable=False),
+        sa.Column('role', sa.String(20), nullable=False),
+        sa.Column('content', sa.Text, nullable=False),
+        sa.Column('sequence_number', sa.Integer, nullable=False),
+        sa.Column('created_at', sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.ForeignKeyConstraint(['thread_id'], ['threads.thread_id'], ondelete='CASCADE'),
+        sa.CheckConstraint("role IN ('user', 'assistant')", name='chk_messages_role'),
+        sa.CheckConstraint('LENGTH(content) > 0 AND LENGTH(content) <= 100000', name='chk_messages_content_length'),
+        sa.UniqueConstraint('thread_id', 'sequence_number', name='uq_messages_thread_sequence'),
+    )
+
+    # Create indexes
+    op.create_index('idx_messages_thread_id', 'messages', ['thread_id'])
+
+def downgrade():
+    op.drop_table('messages')
+    op.drop_table('threads')
+```
+
+### Future Schema Changes
+
+**Adding Columns** (e.g., `archived` flag):
+```python
+def upgrade():
+    op.add_column('threads', sa.Column('archived', sa.Boolean, nullable=False, server_default='false'))
+    op.create_index('idx_threads_archived', 'threads', ['user_id', 'archived'])
+
+def downgrade():
+    op.drop_index('idx_threads_archived')
+    op.drop_column('threads', 'archived')
+```
 
 ---
 
 ## Testing Data
 
-### Seed Data for Development
+### Test Fixtures
 
+**Pytest Fixtures** (`tests/fixtures/data.py`):
 ```python
-async def seed_test_data():
-    async with async_session() as session:
-        # Create test thread
-        thread = Thread(
-            user_id=uuid.UUID("test-user-id"),
-            title="Test Conversation about ROS 2"
-        )
-        session.add(thread)
-        await session.flush()
+import pytest
+from uuid import uuid4
+from datetime import datetime
 
-        # Add messages
-        messages = [
-            Message(thread_id=thread.thread_id, role="user", content="What is ROS 2?", sequence_number=1),
-            Message(thread_id=thread.thread_id, role="assistant", content="ROS 2 is...", sequence_number=2)
-        ]
-        session.add_all(messages)
-        await session.commit()
+@pytest.fixture
+def test_user_id():
+    """Better Auth user ID for testing."""
+    return uuid4()
+
+@pytest.fixture
+def test_thread(db_session, test_user_id):
+    """Create test thread."""
+    from app.models import Thread
+
+    thread = Thread(
+        thread_id=uuid4(),
+        user_id=test_user_id,
+        title="Test Thread",
+        metadata={"tags": ["test"]}
+    )
+    db_session.add(thread)
+    db_session.commit()
+    return thread
+
+@pytest.fixture
+def test_messages(db_session, test_thread):
+    """Create test messages."""
+    from app.models import Message
+
+    messages = [
+        Message(
+            message_id=uuid4(),
+            thread_id=test_thread.thread_id,
+            role='user',
+            content='What is inverse kinematics?',
+            sequence_number=1
+        ),
+        Message(
+            message_id=uuid4(),
+            thread_id=test_thread.thread_id,
+            role='assistant',
+            content='Inverse kinematics is...',
+            sequence_number=2
+        )
+    ]
+    db_session.add_all(messages)
+    db_session.commit()
+    return messages
+```
+
+### Sample Test Data
+
+**SQL Insert** (`tests/data/sample_data.sql`):
+```sql
+-- Test user (Better Auth managed)
+INSERT INTO "user" (id, email, name, software_level, hardware_access)
+VALUES
+    ('a1b2c3d4-e5f6-7890-1234-567890abcdef', 'test@example.com', 'Test User', 'Intermediate', 'Laptop/Cloud');
+
+-- Test thread
+INSERT INTO threads (thread_id, user_id, title, metadata)
+VALUES
+    ('thread-0001-0000-0000-000000000001', 'a1b2c3d4-e5f6-7890-1234-567890abcdef', 'Kinematics Questions', '{"tags": ["kinematics", "robotics"]}');
+
+-- Test messages
+INSERT INTO messages (message_id, thread_id, role, content, sequence_number)
+VALUES
+    ('msg-0001-0000-0000-000000000001', 'thread-0001-0000-0000-000000000001', 'user', 'What is inverse kinematics?', 1),
+    ('msg-0002-0000-0000-000000000002', 'thread-0001-0000-0000-000000000001', 'assistant', 'Inverse kinematics (IK) is the process of calculating joint angles needed to place a robot''s end-effector at a desired position and orientation.[^1]\n\n[^1]: Chapter 5: Robot Kinematics, Section 5.3', 2),
+    ('msg-0003-0000-0000-000000000003', 'thread-0001-0000-0000-000000000001', 'user', 'Give me a code example in Python', 3);
 ```
 
 ---
 
-## Next Steps
+## Related Documents
 
-1. ✅ **Data Model Complete** → Proceed to API Contracts
-2. Run Alembic migration in development environment
-3. Test CRUD operations with pytest
-4. Validate cascade deletes
-5. Monitor query performance with `EXPLAIN ANALYZE`
+- **Specification**: `spec.md` - Functional requirements and acceptance criteria
+- **Plan**: `plan.md` - Implementation plan with architecture decisions
+- **Research**: `research.md` - ChatKit integration patterns and best practices
+- **Contracts**: `contracts/chatkit-api.json` - API request/response schemas
 
 ---
 
-**Status**: ✅ Ready for Implementation
-**Dependencies**: Requires Neon database access, SQLAlchemy 2.0+ installed
+## Changelog
+
+| Date       | Change                                      | Author     |
+|------------|---------------------------------------------|------------|
+| 2025-12-25 | Initial data model specification            | AI Assistant |
