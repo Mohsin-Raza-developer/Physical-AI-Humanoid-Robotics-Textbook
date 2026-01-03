@@ -129,11 +129,11 @@ const FormInput: React.FC<FormInputProps> = ({
 
 const RegisterMultiStepForm: React.FC<RegisterMultiStepFormProps> = ({ onSuccess }) => {
   const { siteConfig } = useDocusaurusContext();
-  const apiBaseUrl = (siteConfig.customFields?.apiBaseUrl as string) || 'http://localhost:3002';
+  const authBaseUrl = (siteConfig.customFields?.authBaseUrl as string) || 'https://auth-backend-mohsin-raza-developers-projects.vercel.app';
 
   useEffect(() => {
-    console.log('RegisterForm using API:', apiBaseUrl);
-  }, [apiBaseUrl]);
+    console.log('RegisterForm using API:', authBaseUrl);
+  }, [authBaseUrl]);
 
   const { login } = useAuth();
   const [step, setStep] = useState<number>(1);
@@ -329,7 +329,7 @@ const RegisterMultiStepForm: React.FC<RegisterMultiStepFormProps> = ({ onSuccess
     // Check if email is already registered
     setLoading(true);
     try {
-      const response = await axios.post(`${apiBaseUrl}/api/auth/check-email`, {
+      const response = await axios.post(`${authBaseUrl}/api/auth/check-email`, {
         email: formData.step1.email
       });
 
@@ -361,7 +361,7 @@ const RegisterMultiStepForm: React.FC<RegisterMultiStepFormProps> = ({ onSuccess
     setSuccessMessage('');
 
     try {
-      const response = await axios.post(`${apiBaseUrl}/api/auth/register`, {
+      const response = await axios.post(`${authBaseUrl}/api/auth/register`, {
         firstName: formData.step1.firstName,
         lastName: formData.step1.lastName,
         email: formData.step1.email,
@@ -373,7 +373,7 @@ const RegisterMultiStepForm: React.FC<RegisterMultiStepFormProps> = ({ onSuccess
       if (response.status === 201) {
         // Automatically log in the user after successful registration
         try {
-          const loginResponse = await axios.post(`${apiBaseUrl}/api/auth/login`, {
+          const loginResponse = await axios.post(`${authBaseUrl}/api/auth/login`, {
             email: formData.step1.email,
             password: formData.step1.password,
           });

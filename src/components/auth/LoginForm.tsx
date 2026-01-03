@@ -17,7 +17,7 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
 const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
   const { siteConfig } = useDocusaurusContext();
-  const apiBaseUrl = (siteConfig.customFields?.apiBaseUrl as string) || 'http://localhost:3002';
+  const authBaseUrl = (siteConfig.customFields?.authBaseUrl as string) || 'https://auth-backend-mohsin-raza-developers-projects.vercel.app';
 
   const { login } = useAuth();
   const [formData, setFormData] = useState<FormData>({
@@ -79,7 +79,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
     setErrors({});
 
     try {
-      const response = await axios.post(`${apiBaseUrl}/api/auth/login`, formData, {
+      const response = await axios.post(`${authBaseUrl}/api/auth/login`, formData, {
         withCredentials: true
       });
 

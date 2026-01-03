@@ -15,8 +15,12 @@ const config: Config = {
   },
 
   customFields: {
-    // Falls back to production URL if env var is missing
-    apiBaseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'https://auth-backend-mohsin-raza-developers-projects.vercel.app',
+    // ChatBot backend (localhost for ChatKit)
+    apiBaseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000',
+
+    // Auth backend (Vercel deployment)
+    authBaseUrl: process.env.NEXT_PUBLIC_AUTH_BASE_URL || 'https://auth-backend-mohsin-raza-developers-projects.vercel.app',
+    // We're using custom backend, so it's not required
   },
 
   // Google Fonts preload for performance (ADR-003)
@@ -41,6 +45,15 @@ const config: Config = {
       attributes: {
         rel: 'stylesheet',
         href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
+      },
+    },
+    // ChatKit web component - required even for React package
+    // Note: NOT async to ensure it loads before React component
+    {
+      tagName: 'script',
+      attributes: {
+        src: 'https://cdn.platform.openai.com/deployments/chatkit/chatkit.js',
+        defer: 'true', // Use defer instead of async for proper ordering
       },
     },
   ],

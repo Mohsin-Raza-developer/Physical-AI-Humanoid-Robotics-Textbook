@@ -1,0 +1,727 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "ChatKit Robotics Chatbot API",
+    "description": "Backend API implementing OpenAI ChatKit protocol for robotics learning assistant",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Physical AI & Humanoid Robotics Textbook",
+      "url": "https://github.com/Physical-AI-Humanoid-Robotics-Textbook"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://chatbot-backend.example.com",
+      "description": "Production server"
+    },
+    {
+      "url": "http://localhost:8000",
+      "description": "Local development server"
+    }
+  ],
+  "security": [
+    {
+      "BetterAuthSession": []
+    }
+  ],
+  "paths": {
+    "/chatkit": {
+      "post": {
+        "summary": "ChatKit Protocol Endpoint",
+        "description": "Single endpoint implementing ChatKit protocol for all operations (create thread, send message, list threads, etc.)",
+        "operationId": "handleChatkitRequest",
+        "tags": ["ChatKit"],
+        "security": [
+          {
+            "BetterAuthSession": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatkitRequest"
+              },
+              "examples": {
+                "createThread": {
+                  "summary": "Create New Thread",
+                  "value": {
+                    "type": "thread.create",
+                    "metadata": {
+                      "title": "Inverse Kinematics Questions"
+                    }
+                  }
+                },
+                "sendMessage": {
+                  "summary": "Send User Message",
+                  "value": {
+                    "type": "message.create",
+                    "thread_id": "thread-uuid-here",
+                    "message": {
+                      "role": "user",
+                      "text": "Explain inverse kinematics in robotics"
+                    }
+                  }
+                },
+                "listThreads": {
+                  "summary": "List User Threads",
+                  "value": {
+                    "type": "threads.list",
+                    "limit": 20,
+                    "cursor": null
+                  }
+                },
+                "getThread": {
+                  "summary": "Get Thread Details",
+                  "value": {
+                    "type": "thread.get",
+                    "thread_id": "thread-uuid-here"
+                  }
+                },
+                "deleteThread": {
+                  "summary": "Delete Thread",
+                  "value": {
+                    "type": "thread.delete",
+                    "thread_id": "thread-uuid-here"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response (may be SSE stream for message creation)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatkitResponse"
+                },
+                "examples": {
+                  "threadCreated": {
+                    "summary": "Thread Created",
+                    "value": {
+                      "type": "thread.created",
+                      "thread": {
+                        "id": "thread-uuid-here",
+                        "created_at": "2025-12-25T10:00:00Z",
+                        "updated_at": "2025-12-25T10:00:00Z",
+                        "metadata": {
+                          "title": "Inverse Kinematics Questions"
+                        }
+                      }
+                    }
+                  },
+                  "threadsList": {
+                    "summary": "Threads List",
+                    "value": {
+                      "type": "threads.list",
+                      "threads": [
+                        {
+                          "id": "thread-1",
+                          "created_at": "2025-12-25T10:00:00Z",
+                          "updated_at": "2025-12-25T11:30:00Z",
+                          "metadata": {
+                            "title": "Kinematics Questions"
+                          }
+                        }
+                      ],
+                      "next_cursor": null
+                    }
+                  }
+                }
+              },
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatkitStreamEvent"
+                },
+                "examples": {
+                  "streamingResponse": {
+                    "summary": "SSE Stream Events",
+                    "value": "event: message_start\\ndata: {\"type\":\"message_start\",\"message\":{\"id\":\"msg-uuid\",\"role\":\"assistant\"}}\\n\\nevent: content_delta\\ndata: {\"type\":\"content_delta\",\"delta\":\"Inverse kinematics\"}\\n\\nevent: action\\ndata: {\"type\":\"action\",\"action\":{\"name\":\"search_textbook\",\"status\":\"started\"}}\\n\\nevent: message_end\\ndata: {\"type\":\"message_end\",\"message\":{\"id\":\"msg-uuid\",\"text\":\"Full response...\"}}\\n\\n"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or expired session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "type": "authentication_error",
+                    "message": "Invalid or expired session token"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - User doesn't own the thread",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "type": "authorization_error",
+                    "message": "You do not have permission to access this thread"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found - Thread or message not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "type": "not_found_error",
+                    "message": "Thread not found"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error - Invalid request parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "type": "validation_error",
+                    "message": "Message content cannot be empty",
+                    "details": {
+                      "field": "message.text",
+                      "constraint": "min_length"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "type": "internal_error",
+                    "message": "An unexpected error occurred"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health Check",
+        "description": "Check backend health status",
+        "operationId": "healthCheck",
+        "tags": ["System"],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                },
+                "example": {
+                  "status": "healthy",
+                  "timestamp": "2025-12-25T10:00:00Z",
+                  "services": {
+                    "database": "connected",
+                    "vector_db": "connected",
+                    "ai_model": "available"
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service is unhealthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                },
+                "example": {
+                  "status": "unhealthy",
+                  "timestamp": "2025-12-25T10:00:00Z",
+                  "services": {
+                    "database": "disconnected",
+                    "vector_db": "connected",
+                    "ai_model": "available"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BetterAuthSession": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "Session Token",
+        "description": "Better Auth session token from browser cookies"
+      }
+    },
+    "schemas": {
+      "ChatkitRequest": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ThreadCreateRequest"
+          },
+          {
+            "$ref": "#/components/schemas/MessageCreateRequest"
+          },
+          {
+            "$ref": "#/components/schemas/ThreadsListRequest"
+          },
+          {
+            "$ref": "#/components/schemas/ThreadGetRequest"
+          },
+          {
+            "$ref": "#/components/schemas/ThreadDeleteRequest"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "thread.create": "#/components/schemas/ThreadCreateRequest",
+            "message.create": "#/components/schemas/MessageCreateRequest",
+            "threads.list": "#/components/schemas/ThreadsListRequest",
+            "thread.get": "#/components/schemas/ThreadGetRequest",
+            "thread.delete": "#/components/schemas/ThreadDeleteRequest"
+          }
+        }
+      },
+      "ThreadCreateRequest": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["thread.create"]
+          },
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "maxLength": 255,
+                "nullable": true
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "MessageCreateRequest": {
+        "type": "object",
+        "required": ["type", "thread_id", "message"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["message.create"]
+          },
+          "thread_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "message": {
+            "type": "object",
+            "required": ["role", "text"],
+            "properties": {
+              "role": {
+                "type": "string",
+                "enum": ["user"]
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100000
+              }
+            }
+          }
+        }
+      },
+      "ThreadsListRequest": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["threads.list"]
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 20
+          },
+          "cursor": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "ThreadGetRequest": {
+        "type": "object",
+        "required": ["type", "thread_id"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["thread.get"]
+          },
+          "thread_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "ThreadDeleteRequest": {
+        "type": "object",
+        "required": ["type", "thread_id"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["thread.delete"]
+          },
+          "thread_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "ChatkitResponse": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ThreadCreatedResponse"
+          },
+          {
+            "$ref": "#/components/schemas/ThreadsListResponse"
+          },
+          {
+            "$ref": "#/components/schemas/ThreadResponse"
+          },
+          {
+            "$ref": "#/components/schemas/ThreadDeletedResponse"
+          }
+        ]
+      },
+      "ThreadCreatedResponse": {
+        "type": "object",
+        "required": ["type", "thread"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["thread.created"]
+          },
+          "thread": {
+            "$ref": "#/components/schemas/ThreadMetadata"
+          }
+        }
+      },
+      "ThreadsListResponse": {
+        "type": "object",
+        "required": ["type", "threads"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["threads.list"]
+          },
+          "threads": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ThreadMetadata"
+            }
+          },
+          "next_cursor": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "ThreadResponse": {
+        "type": "object",
+        "required": ["type", "thread"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["thread"]
+          },
+          "thread": {
+            "$ref": "#/components/schemas/ThreadMetadata"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MessageItem"
+            }
+          }
+        }
+      },
+      "ThreadDeletedResponse": {
+        "type": "object",
+        "required": ["type", "thread_id"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["thread.deleted"]
+          },
+          "thread_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "ChatkitStreamEvent": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/MessageStartEvent"
+          },
+          {
+            "$ref": "#/components/schemas/ContentDeltaEvent"
+          },
+          {
+            "$ref": "#/components/schemas/ActionEvent"
+          },
+          {
+            "$ref": "#/components/schemas/MessageEndEvent"
+          }
+        ]
+      },
+      "MessageStartEvent": {
+        "type": "object",
+        "required": ["type", "message"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["message_start"]
+          },
+          "message": {
+            "type": "object",
+            "required": ["id", "role"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "role": {
+                "type": "string",
+                "enum": ["assistant"]
+              }
+            }
+          }
+        }
+      },
+      "ContentDeltaEvent": {
+        "type": "object",
+        "required": ["type", "delta"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["content_delta"]
+          },
+          "delta": {
+            "type": "string"
+          }
+        }
+      },
+      "ActionEvent": {
+        "type": "object",
+        "required": ["type", "action"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["action"]
+          },
+          "action": {
+            "type": "object",
+            "required": ["name", "status"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "example": "search_textbook"
+              },
+              "status": {
+                "type": "string",
+                "enum": ["started", "completed", "failed"]
+              },
+              "description": {
+                "type": "string",
+                "example": "Searching the robotics textbook for relevant content"
+              }
+            }
+          }
+        }
+      },
+      "MessageEndEvent": {
+        "type": "object",
+        "required": ["type", "message"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["message_end"]
+          },
+          "message": {
+            "$ref": "#/components/schemas/MessageItem"
+          }
+        }
+      },
+      "ThreadMetadata": {
+        "type": "object",
+        "required": ["id", "created_at", "updated_at", "metadata"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "maxLength": 255,
+                "nullable": true
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "MessageItem": {
+        "type": "object",
+        "required": ["id", "thread_id", "role", "text", "created_at"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "thread_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["user", "assistant"]
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100000
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": ["type", "message"],
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "authentication_error",
+                  "authorization_error",
+                  "not_found_error",
+                  "validation_error",
+                  "rate_limit_error",
+                  "internal_error"
+                ]
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      },
+      "HealthResponse": {
+        "type": "object",
+        "required": ["status", "timestamp"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["healthy", "unhealthy", "degraded"]
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "services": {
+            "type": "object",
+            "properties": {
+              "database": {
+                "type": "string",
+                "enum": ["connected", "disconnected"]
+              },
+              "vector_db": {
+                "type": "string",
+                "enum": ["connected", "disconnected"]
+              },
+              "ai_model": {
+                "type": "string",
+                "enum": ["available", "unavailable"]
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "ChatKit",
+      "description": "ChatKit protocol operations (threads, messages, streaming)"
+    },
+    {
+      "name": "System",
+      "description": "System health and monitoring"
+    }
+  ]
+}

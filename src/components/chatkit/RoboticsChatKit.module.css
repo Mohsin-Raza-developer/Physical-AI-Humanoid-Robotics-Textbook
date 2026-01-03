@@ -1,0 +1,417 @@
+/**
+ * RoboticsChatKit Styles - Enhanced
+ */
+
+.chatkitContainer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chatkit {
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  box-shadow:
+    0 10px 40px -10px rgba(99, 102, 241, 0.2),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  transition: box-shadow 0.3s ease;
+}
+
+.chatkit:hover {
+  box-shadow:
+    0 15px 50px -10px rgba(99, 102, 241, 0.25),
+    0 0 0 1px rgba(99, 102, 241, 0.1);
+}
+
+/* Error banner */
+.errorBanner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: var(--ifm-color-danger-contrast-background);
+  border: 1px solid var(--ifm-color-danger);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  color: var(--ifm-color-danger-dark);
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1);
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.errorIcon {
+  font-size: 20px;
+  flex-shrink: 0;
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+.errorMessage {
+  flex: 1;
+  line-height: 1.5;
+}
+
+.errorDismiss {
+  background: var(--ifm-color-danger-contrast-background);
+  border: none;
+  color: var(--ifm-color-danger-dark);
+  cursor: pointer;
+  font-size: 16px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  font-weight: 700;
+}
+
+.errorDismiss:hover {
+  background: var(--ifm-color-danger-darker);
+  color: white;
+  transform: scale(1.1);
+}
+
+.errorDismiss:active {
+  transform: scale(0.95);
+}
+
+/* Loading overlay */
+.loadingOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--ifm-background-surface-color);
+  backdrop-filter: blur(8px);
+  border-radius: 16px;
+  z-index: 10;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.loadingSpinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e0e7ff;
+  border-top-color: #6366f1;
+  border-right-color: #8b5cf6;
+  border-radius: 50%;
+  animation: spin 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
+  margin-bottom: 20px;
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+}
+
+.loadingOverlay p {
+  color: var(--ifm-color-emphasis-700);
+  font-size: 15px;
+  font-weight: 500;
+  margin: 0;
+  letter-spacing: 0.3px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Dark mode support - minimal overrides as CSS vars handle most theming */
+[data-theme='dark'] .chatkit {
+  box-shadow:
+    0 10px 40px -10px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+[data-theme='dark'] .chatkit:hover {
+  box-shadow:
+    0 15px 50px -10px rgba(99, 102, 241, 0.3),
+    0 0 0 1px rgba(99, 102, 241, 0.2);
+}
+
+[data-theme='dark'] .loadingSpinner {
+  border-color: var(--ifm-color-emphasis-300);
+  border-top-color: #6366f1;
+  border-right-color: #8b5cf6;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .chatkit {
+    border-radius: 0;
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  .errorBanner {
+    border-radius: 0;
+    margin-bottom: 0;
+  }
+
+  .chatkitContainer {
+    gap: 0;
+  }
+}
+
+/* Small Screen Optimization (3-4 inch displays - 320-360px) */
+
+/* 360px breakpoint - most common small screen size */
+@media (max-width: 360px) {
+  .chatkitContainer {
+    gap: 8px;
+    /* Remove horizontal scrolling */
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  .chatkit {
+    border-radius: 8px;
+    /* Prevent horizontal scroll */
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Minimum font sizes for readability - T017 */
+  .chatkit,
+  .chatkitContainer {
+    font-size: 14px; /* Minimum body text */
+    line-height: 1.5;
+  }
+
+  /* Input fields need larger font to prevent iOS zoom */
+  .chatkit input,
+  .chatkit textarea {
+    font-size: 16px; /* Minimum input field size */
+    line-height: 1.4;
+  }
+
+  /* Touch-friendly spacing - T020 */
+  .errorBanner {
+    padding: 12px 14px;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  /* Touch targets minimum 44x44px - T018 */
+  .errorDismiss {
+    min-width: 44px;
+    min-height: 44px;
+    width: 44px;
+    height: 44px;
+  }
+
+  /* Reduce spacing for small screens */
+  .loadingOverlay {
+    padding: 16px;
+  }
+
+  .loadingSpinner {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 16px;
+  }
+}
+
+/* 320px breakpoint - smallest common screen size */
+@media (max-width: 320px) {
+  .chatkitContainer {
+    gap: 6px;
+  }
+
+  .chatkit {
+    border-radius: 6px;
+  }
+
+  .errorBanner {
+    padding: 10px 12px;
+    gap: 10px;
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+
+  .errorIcon {
+    font-size: 18px;
+  }
+
+  .loadingSpinner {
+    width: 36px;
+    height: 36px;
+    margin-bottom: 12px;
+  }
+
+  .loadingOverlay p {
+    font-size: 13px;
+  }
+
+  /* Maintain minimum touch targets even on smallest screens */
+  .errorDismiss {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* Portrait orientation optimization - T019 */
+@media (max-width: 360px) and (orientation: portrait) {
+  .chatkitContainer {
+    /* Optimize vertical space in portrait */
+    gap: 8px;
+    padding: 0;
+  }
+
+  .chatkit {
+    /* Full height in portrait for more conversation space */
+    min-height: 400px;
+  }
+
+  .errorBanner {
+    /* Compact error banner in portrait */
+    padding: 10px 12px;
+  }
+}
+
+/* Landscape orientation optimization - T019 */
+@media (max-height: 360px) and (orientation: landscape) {
+  .chatkitContainer {
+    /* Optimize horizontal space in landscape */
+    gap: 6px;
+  }
+
+  .chatkit {
+    /* Reduced height in landscape */
+    max-height: 100%;
+  }
+
+  .errorBanner {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .errorIcon {
+    font-size: 16px;
+  }
+
+  .loadingSpinner {
+    width: 32px;
+    height: 32px;
+    margin-bottom: 10px;
+  }
+
+  .loadingOverlay p {
+    font-size: 12px;
+  }
+}
+
+/* Prevent accidental taps with proper spacing - T020 */
+@media (max-width: 360px) {
+  /* Add padding around interactive elements */
+  .errorDismiss {
+    margin: 0 4px;
+    padding: 0;
+  }
+
+  /* Ensure adequate spacing between clickable items */
+  .errorBanner {
+    gap: 14px; /* Increased gap to prevent accidental taps */
+  }
+}
+
+/* Remove all horizontal scrolling - T021 */
+.chatkitContainer,
+.chatkit,
+.errorBanner,
+.loadingOverlay {
+  overflow-x: hidden;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.chatkitContainer * {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .loadingSpinner,
+  .errorIcon,
+  .errorBanner,
+  .loadingOverlay p {
+    animation: none;
+  }
+
+  .chatkit,
+  .errorDismiss {
+    transition: none;
+  }
+}
+
+/*
+  ChatKit Message Styling Limitation:
+
+  ChatKit uses Shadow DOM and does NOT expose ::part() selectors for message bubbles.
+  Message appearance is controlled ONLY through theme configuration in useChatKit():
+
+  - theme.typography: Font family, size, mono font for code
+  - theme.color: Accent colors, grayscale, surface colors
+  - theme.radius: Border radius (pill, round, soft, sharp)
+  - theme.density: Spacing (compact, normal, spacious)
+
+  See RoboticsChatKit.tsx for full theme configuration.
+
+  For custom message rendering, consider:
+  1. Building a custom chat UI component
+  2. Using ChatKit widgets API (backend streaming)
+  3. Switching to a fully customizable library (Stream Chat React, React Chatbotify)
+*/
