@@ -44,9 +44,8 @@ export function ChatKitWidget({ position = 'bottom-right' }: ChatKitWidgetProps)
   }, [authState]);
 
   // Get backend URL from siteConfig or default
-  // DEBUG: Hardcoding to localhost:8000 to rule out config issues
-  const apiBaseUrl = 'http://localhost:8000';
-  // const apiBaseUrl = (siteConfig.customFields?.apiBaseUrl as string) || 'http://localhost:8000';
+  // Use apiBaseUrl from docusaurus.config.ts (Railway production or localhost for dev)
+  const apiBaseUrl = (siteConfig.customFields?.apiBaseUrl as string) || 'https://app-production-f33e.up.railway.app';
 
   // Check if user is logged in
   const isLoggedIn = authState.isLoggedIn;

@@ -45,7 +45,7 @@ export function RoboticsChatKit({
   const userId = authState.isLoggedIn ? authState.user?.id || null : null;
 
   // Get API base URL from Docusaurus config
-  const apiBaseUrl = (siteConfig.customFields?.apiBaseUrl as string) || 'http://localhost:8000';
+  const apiBaseUrl = (siteConfig.customFields?.apiBaseUrl as string) || 'https://app-production-f33e.up.railway.app';
   const chatkitUrl = `${apiBaseUrl}/chatkit`;
 
   // Get user-specific localStorage key for thread persistence
