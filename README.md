@@ -24,7 +24,7 @@ This open-source textbook teaches Physical AI and Humanoid Robotics fundamentals
 - ✅ **Hands-on ROS 2, Gazebo, Isaac Sim tutorials** - Practical exercises with real-world applications
 - ✅ **Real-world humanoid robotics examples** - Application-focused learning with industry-relevant scenarios
 - ✅ **User Authentication System** - Secure registration, login, password reset, and account management
-- ✅ **RAG Chatbot (Coming Soon)** - AI-powered learning assistant with course content access
+- ✅ **RAG Chatbot** - AI-powered learning assistant with course content access
 - 🚧 **Personalized content (Coming Soon)** - Adaptive learning paths based on skill level and interests
 
 ## Authentication System
