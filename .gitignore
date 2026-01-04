@@ -133,6 +133,8 @@ COM
 *.mp4
 nul
 *.bak
+start.bat
+stop.bat
 
 # Playwright MCP
 .playwright-mcp/
