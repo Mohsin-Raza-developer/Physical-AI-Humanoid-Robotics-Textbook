@@ -15,12 +15,11 @@ const config: Config = {
   },
 
   customFields: {
-    // ChatBot backend (localhost for ChatKit)
-    apiBaseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000',
+    // ChatBot backend (Railway production, localhost for local dev)
+    apiBaseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'https://app-production-f33e.up.railway.app',
 
     // Auth backend (Vercel deployment)
     authBaseUrl: process.env.NEXT_PUBLIC_AUTH_BASE_URL || 'https://auth-backend-mohsin-raza-developers-projects.vercel.app',
-    // We're using custom backend, so it's not required
   },
 
   // Google Fonts preload for performance (ADR-003)
