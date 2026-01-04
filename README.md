@@ -96,36 +96,6 @@ The textbook includes a comprehensive authentication system built with:
 
 Visit the live textbook at: [https://mohsin-raza-developer.github.io/Physical-AI-Humanoid-Robotics-Textbook/](https://mohsin-raza-developer.github.io/Physical-AI-Humanoid-Robotics-Textbook/)
 
-### Local Development
-
-To run the textbook locally for development or offline viewing:
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/Mohsin-Raza-developer/Physical-AI-Humanoid-Robotics-Textbook.git
-   cd Physical-AI-Humanoid-Robotics-Textbook
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Start development server:**
-   ```bash
-   npm start
-   ```
-
-4. **Open your browser** and navigate to [http://localhost:3000](http://localhost:3000)
-
-### Build for Production
-
-To build the static site for deployment:
-
-```bash
-npm run build
-```
-
 ## Contributing
 
 We welcome contributions to improve this textbook! 
