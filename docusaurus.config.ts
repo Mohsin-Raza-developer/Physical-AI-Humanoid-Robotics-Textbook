@@ -104,7 +104,9 @@ const config: Config = {
     // Replace with your project's social card
     image: 'img/docusaurus-social-card.png',
     colorMode: {
-      respectPrefersColorScheme: true,
+      defaultMode: 'dark',
+      disableSwitch: false,
+      respectPrefersColorScheme: false,
     },
     metadata: [
       { name: 'keywords', content: 'Physical AI, Humanoid Robotics, ROS 2, Gazebo, Isaac Sim, VLA, robotics education, AI robotics' },
