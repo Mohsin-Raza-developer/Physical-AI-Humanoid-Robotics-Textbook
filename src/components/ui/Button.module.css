@@ -1,0 +1,359 @@
+/* Base Button Styles */
+.button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  outline: none;
+  border: none;
+  text-decoration: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.buttonContent {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.buttonText {
+  position: relative;
+  z-index: 1;
+}
+
+.buttonIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.buttonIcon--animated {
+  animation: iconBounce 0.6s ease-in-out;
+}
+
+@keyframes iconBounce {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    transform: scale(1.2) rotate(-5deg);
+  }
+  75% {
+    transform: scale(1.1) rotate(5deg);
+  }
+}
+
+/* Ripple Effect */
+.buttonRipples {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.buttonRipple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: scale(0);
+  animation: ripple 0.6s ease-out;
+  pointer-events: none;
+}
+
+@keyframes ripple {
+  to {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+/* Button Sizes */
+.button--sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  border-radius: 8px;
+}
+
+.button--md {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border-radius: 10px;
+}
+
+.button--lg {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+  border-radius: 12px;
+}
+
+/* Primary Button */
+.button--primary {
+  background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%);
+  color: white;
+  box-shadow:
+    0 4px 12px rgba(30, 64, 175, 0.3),
+    0 2px 6px rgba(124, 58, 237, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+}
+
+.button--primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #2563eb 0%, #9333ea 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 0;
+}
+
+.button--primary:hover::before {
+  opacity: 1;
+}
+
+.button--primary:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow:
+    0 8px 24px rgba(30, 64, 175, 0.4),
+    0 4px 12px rgba(124, 58, 237, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.button--primary:active {
+  transform: translateY(-2px) scale(1);
+}
+
+/* Secondary Button */
+.button--secondary {
+  background: linear-gradient(135deg, #6b7280 0%, #1e40af 100%);
+  color: white;
+  box-shadow:
+    0 4px 12px rgba(107, 114, 128, 0.3),
+    0 2px 6px rgba(30, 64, 175, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+}
+
+.button--secondary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #9ca3af 0%, #3b82f6 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 0;
+}
+
+.button--secondary:hover::before {
+  opacity: 1;
+}
+
+.button--secondary:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow:
+    0 8px 24px rgba(107, 114, 128, 0.35),
+    0 4px 12px rgba(30, 64, 175, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.button--secondary:active {
+  transform: translateY(-2px) scale(1);
+}
+
+/* Accent Button */
+.button--accent {
+  background: linear-gradient(135deg, #dc2626 0%, #ea580c 100%);
+  color: white;
+  box-shadow:
+    0 4px 12px rgba(220, 38, 38, 0.3),
+    0 2px 6px rgba(234, 88, 12, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+}
+
+.button--accent::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 0;
+}
+
+.button--accent:hover::before {
+  opacity: 1;
+}
+
+.button--accent:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow:
+    0 8px 24px rgba(220, 38, 38, 0.4),
+    0 4px 12px rgba(234, 88, 12, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.button--accent:active {
+  transform: translateY(-2px) scale(1);
+}
+
+/* Ghost Button */
+.button--ghost {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.button--ghost::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.15);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 0;
+}
+
+.button--ghost:hover::before {
+  opacity: 1;
+}
+
+.button--ghost:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.button--ghost:active {
+  transform: translateY(-2px) scale(1);
+}
+
+/* Dark Mode Adjustments */
+[data-theme='dark'] .button--primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #a855f7 100%);
+  box-shadow:
+    0 4px 12px rgba(59, 130, 246, 0.4),
+    0 2px 6px rgba(168, 85, 247, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+[data-theme='dark'] .button--primary::before {
+  background: linear-gradient(135deg, #60a5fa 0%, #c084fc 100%);
+}
+
+[data-theme='dark'] .button--primary:hover {
+  box-shadow:
+    0 8px 24px rgba(59, 130, 246, 0.5),
+    0 4px 12px rgba(168, 85, 247, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+[data-theme='dark'] .button--secondary {
+  background: linear-gradient(135deg, #4b5563 0%, #3b82f6 100%);
+}
+
+[data-theme='dark'] .button--secondary::before {
+  background: linear-gradient(135deg, #6b7280 0%, #60a5fa 100%);
+}
+
+[data-theme='dark'] .button--ghost {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme='dark'] .button--ghost:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Loading State */
+.button--loading {
+  pointer-events: none;
+}
+
+.button--loading .buttonContent {
+  opacity: 0.6;
+}
+
+.button--loading::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  z-index: 3;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .button,
+  .buttonIcon,
+  .button::before,
+  .buttonRipple {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) {
+  .button:hover {
+    transform: none;
+  }
+
+  .button:active {
+    transform: scale(0.98);
+  }
+}

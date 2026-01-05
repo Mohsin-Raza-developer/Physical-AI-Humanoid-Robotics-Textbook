@@ -3,12 +3,42 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  border-radius: 0.75rem;
+  border-radius: 1rem;
   overflow: hidden;
   background: linear-gradient(180deg, rgba(30, 64, 175, 0.05) 0%, rgba(124, 58, 237, 0.05) 100%);
   border: 1px solid rgba(30, 64, 175, 0.1);
-  transition: all 0.3s ease-in-out;
-  will-change: transform, opacity;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  will-change: transform;
+  position: relative;
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+.featureCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(30, 64, 175, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  border-radius: 1rem;
+  z-index: 0;
+}
+
+.featureCard::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
 }
 
 .featureCardLink {
@@ -19,6 +49,8 @@
   color: inherit;
   height: 100%;
   outline-offset: 4px;
+  position: relative;
+  z-index: 1;
 }
 
 .featureCardLink:hover {
@@ -27,9 +59,20 @@
 }
 
 .featureCard:hover {
-  transform: scale(1.03);
-  box-shadow: 0 10px 30px rgba(30, 64, 175, 0.15);
-  border-color: rgba(30, 64, 175, 0.2);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow:
+    0 20px 40px rgba(30, 64, 175, 0.2),
+    0 0 20px rgba(124, 58, 237, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-color: rgba(30, 64, 175, 0.3);
+}
+
+.featureCard:hover::before {
+  opacity: 1;
+}
+
+.featureCard:hover::after {
+  opacity: 1;
 }
 
 .featureCard:focus-within {
@@ -38,15 +81,17 @@
 }
 
 .featureCardIcon {
-  width: 3.5rem;
-  height: 3.5rem;
+  width: 4rem;
+  height: 4rem;
   margin-bottom: 1.5rem;
   color: #1e40af;
-  transition: transform 0.3s ease-in-out;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  filter: drop-shadow(0 2px 4px rgba(30, 64, 175, 0.2));
 }
 
 .featureCard:hover .featureCardIcon {
-  transform: scale(1.1);
+  transform: scale(1.15) rotate(5deg);
+  filter: drop-shadow(0 4px 12px rgba(30, 64, 175, 0.4));
 }
 
 .featureCardTitle {
@@ -70,13 +115,29 @@
   border-color: rgba(59, 130, 246, 0.15);
 }
 
+[data-theme='dark'] .featureCard::before {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(168, 85, 247, 0.12) 100%);
+}
+
+[data-theme='dark'] .featureCard::after {
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+}
+
 [data-theme='dark'] .featureCard:hover {
-  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.2);
-  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow:
+    0 20px 40px rgba(59, 130, 246, 0.25),
+    0 0 20px rgba(168, 85, 247, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border-color: rgba(59, 130, 246, 0.4);
 }
 
 [data-theme='dark'] .featureCardIcon {
   color: #60a5fa;
+  filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3));
+}
+
+[data-theme='dark'] .featureCard:hover .featureCardIcon {
+  filter: drop-shadow(0 4px 12px rgba(59, 130, 246, 0.6));
 }
 
 [data-theme='dark'] .featureCardTitle {

@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Link from '@docusaurus/Link';
+import styles from './Button.module.css';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'accent' | 'ghost';
 export type ButtonSize = 'sm' | 'md' | 'lg';
@@ -16,6 +17,13 @@ interface ButtonProps {
   ariaLabel?: string;
   icon?: React.ReactNode;
   iconPosition?: 'left' | 'right';
+}
+
+interface Ripple {
+  x: number;
+  y: number;
+  size: number;
+  id: number;
 }
 
 const variantStyles: Record<ButtonVariant, string> = {
@@ -69,22 +77,74 @@ export default function Button({
   icon,
   iconPosition = 'left',
 }: ButtonProps): JSX.Element {
+  const [ripples, setRipples] = useState<Ripple[]>([]);
+  const [isHovered, setIsHovered] = useState(false);
+  const buttonRef = useRef<HTMLElement>(null);
+
+  const createRipple = (event: React.MouseEvent<HTMLElement>) => {
+    if (disabled) return;
+
+    const button = event.currentTarget;
+    const rect = button.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const x = event.clientX - rect.left - size / 2;
+    const y = event.clientY - rect.top - size / 2;
+
+    const newRipple: Ripple = {
+      x,
+      y,
+      size,
+      id: Date.now(),
+    };
+
+    setRipples((prev) => [...prev, newRipple]);
+
+    setTimeout(() => {
+      setRipples((prev) => prev.filter((r) => r.id !== newRipple.id));
+    }, 600);
+  };
+
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    createRipple(event);
+    if (onClick) onClick();
+  };
+
   const baseStyles = `
-    inline-flex items-center justify-center gap-2
-    font-semibold rounded-lg
-    transition-all duration-200 ease-out
-    focus:outline-none focus:ring-offset-2
-    disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
-    ${variantStyles[variant]}
-    ${sizeStyles[size]}
+    ${styles.button}
+    ${styles[`button--${variant}`]}
+    ${styles[`button--${size}`]}
     ${className}
   `.replace(/\s+/g, ' ').trim();
 
   const content = (
     <>
-      {icon && iconPosition === 'left' && <span className="w-5 h-5">{icon}</span>}
-      {children}
-      {icon && iconPosition === 'right' && <span className="w-5 h-5">{icon}</span>}
+      <span className={styles.buttonContent}>
+        {icon && iconPosition === 'left' && (
+          <span className={`${styles.buttonIcon} ${isHovered ? styles['buttonIcon--animated'] : ''}`}>
+            {icon}
+          </span>
+        )}
+        <span className={styles.buttonText}>{children}</span>
+        {icon && iconPosition === 'right' && (
+          <span className={`${styles.buttonIcon} ${isHovered ? styles['buttonIcon--animated'] : ''}`}>
+            {icon}
+          </span>
+        )}
+      </span>
+      <div className={styles.buttonRipples}>
+        {ripples.map((ripple) => (
+          <span
+            key={ripple.id}
+            className={styles.buttonRipple}
+            style={{
+              left: ripple.x,
+              top: ripple.y,
+              width: ripple.size,
+              height: ripple.size,
+            }}
+          />
+        ))}
+      </div>
     </>
   );
 
@@ -94,6 +154,10 @@ export default function Button({
         to={href}
         className={baseStyles}
         aria-label={ariaLabel}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        onClick={handleClick as any}
+        ref={buttonRef as any}
       >
         {content}
       </Link>
@@ -103,10 +167,13 @@ export default function Button({
   return (
     <button
       type={type}
-      onClick={onClick}
+      onClick={handleClick}
       disabled={disabled}
       className={baseStyles}
       aria-label={ariaLabel}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      ref={buttonRef as any}
     >
       {content}
     </button>
