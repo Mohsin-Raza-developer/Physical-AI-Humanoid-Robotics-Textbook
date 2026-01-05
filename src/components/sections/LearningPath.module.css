@@ -1,0 +1,238 @@
+.learningPathSection {
+  padding: 5rem 1.5rem;
+  background: linear-gradient(180deg, var(--ifm-background-color) 0%, var(--ifm-background-surface-color) 100%);
+}
+
+.learningPathHeader {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.learningPathTitle {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 700;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.learningPathSubtitle {
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  color: var(--ifm-color-emphasis-700);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.learningPathSteps {
+  max-width: 900px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.pathStep {
+  position: relative;
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 2rem;
+  margin-bottom: 3rem;
+  padding-bottom: 3rem;
+}
+
+.pathStepNumber {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
+  position: relative;
+  z-index: 2;
+  transition: all 0.3s ease;
+}
+
+.pathStep:hover .pathStepNumber {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(30, 64, 175, 0.4);
+}
+
+.pathConnector {
+  position: absolute;
+  left: 39px;
+  top: 80px;
+  width: 2px;
+  height: calc(100% - 40px);
+  background: linear-gradient(180deg, #1e40af 0%, #7c3aed 100%);
+  opacity: 0.3;
+  z-index: 1;
+}
+
+.pathStepContent {
+  padding: 1rem;
+  background: var(--ifm-card-background-color);
+  border-radius: 1rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.pathStepContent::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, #1e40af 0%, #7c3aed 100%);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 0.3s ease;
+}
+
+.pathStep:hover .pathStepContent::before {
+  transform: scaleY(1);
+}
+
+.pathStep:hover .pathStepContent {
+  transform: translateX(8px);
+  box-shadow: 0 8px 24px rgba(30, 64, 175, 0.1);
+  border-color: rgba(30, 64, 175, 0.2);
+}
+
+.pathStepTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--ifm-heading-color);
+}
+
+.pathStepDescription {
+  font-size: 1rem;
+  color: var(--ifm-color-emphasis-700);
+  margin-bottom: 1rem;
+}
+
+.pathStepTopics {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pathStepTopic {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  color: var(--ifm-color-emphasis-800);
+}
+
+.pathStepTopicIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #1e40af;
+  flex-shrink: 0;
+}
+
+/* Dark Mode */
+[data-theme='dark'] .learningPathTitle {
+  background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme='dark'] .pathStepNumber {
+  background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+[data-theme='dark'] .pathStep:hover .pathStepNumber {
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+}
+
+[data-theme='dark'] .pathConnector {
+  background: linear-gradient(180deg, #60a5fa 0%, #a78bfa 100%);
+}
+
+[data-theme='dark'] .pathStepContent {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='dark'] .pathStepContent::before {
+  background: linear-gradient(180deg, #60a5fa 0%, #a78bfa 100%);
+}
+
+[data-theme='dark'] .pathStep:hover .pathStepContent {
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+[data-theme='dark'] .pathStepTopicIcon {
+  color: #60a5fa;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .learningPathSection {
+    padding: 4rem 1rem;
+  }
+
+  .learningPathHeader {
+    margin-bottom: 3rem;
+  }
+
+  .pathStep {
+    grid-template-columns: 60px 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+  }
+
+  .pathStepNumber {
+    width: 60px;
+    height: 60px;
+    font-size: 1.25rem;
+  }
+
+  .pathConnector {
+    left: 29px;
+    top: 60px;
+  }
+
+  .pathStepTitle {
+    font-size: 1.25rem;
+  }
+
+  .pathStepDescription {
+    font-size: 0.9375rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .pathStep {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .pathStepNumber {
+    margin: 0 auto;
+  }
+
+  .pathConnector {
+    display: none;
+  }
+
+  .pathStep:hover .pathStepContent {
+    transform: none;
+  }
+}

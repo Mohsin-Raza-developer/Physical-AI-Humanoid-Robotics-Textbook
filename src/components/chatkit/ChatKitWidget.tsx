@@ -159,9 +159,19 @@ export function ChatKitWidget({ position = 'bottom-right' }: ChatKitWidgetProps)
     };
   }, []);
 
-  // Handle text selection
+  // Handle text selection (disabled on homepage)
   useEffect(() => {
     const handleSelection = () => {
+      // Check if we're on the homepage
+      const isHomePage = window.location.pathname === '/' || window.location.pathname === '/Physical-AI-Humanoid-Robotics-Textbook/';
+
+      // Don't show Ask button on homepage
+      if (isHomePage) {
+        setSelectedText('');
+        setSelectionPosition(null);
+        return;
+      }
+
       const selection = window.getSelection();
       if (!selection || selection.rangeCount === 0) {
         setSelectedText('');
